@@ -1,0 +1,9 @@
+[package]
+name = "tuner-embedded"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tuner-core = { path = "../../crates/tuner-core", default-features = false }
+tuner-dsp-embedded = { path = "../../crates/tuner-dsp-embedded" }

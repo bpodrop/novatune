@@ -1,0 +1,12 @@
+[package]
+name = "tuner-dsp-algo"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+tuner-core = { path = "../tuner-core" }

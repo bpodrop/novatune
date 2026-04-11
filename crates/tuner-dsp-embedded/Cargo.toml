@@ -1,0 +1,9 @@
+[package]
+name = "tuner-dsp-embedded"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tuner-core = { path = "../tuner-core", default-features = false }
+tuner-dsp-algo = { path = "../tuner-dsp-algo", default-features = false }
