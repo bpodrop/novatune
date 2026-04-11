@@ -3,8 +3,8 @@
 :root {
   font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
   line-height: 1.4;
-  color: #f1f1f1;
-  background: #0e0e0e;
+  color: #f2f6fb;
+  background: #000000;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,7 +17,7 @@
 
 body {
   margin: 0;
-  background: #0e0e0e;
+  background: #000000;
 }
 
 #root {

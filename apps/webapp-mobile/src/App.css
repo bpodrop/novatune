@@ -1,8 +1,26 @@
+:root {
+  --cli-bg: #000000;
+  --cli-panel: #101317;
+  --cli-panel-alt: #0c1014;
+  --cli-chrome: #383e46;
+  --cli-border: #262c34;
+  --cli-label: #8c98aa;
+  --cli-muted: #5c626a;
+  --cli-text: #f2f6fb;
+  --cli-cyan: #00e5ff;
+  --cli-amber: #ffd300;
+  --cli-magenta: #ff2a6d;
+  --cli-green: #24c25b;
+  --cli-danger: #ff7b7b;
+}
+
 .app-shell {
   min-height: 100vh;
   max-width: 430px;
   margin: 0 auto;
   padding: 0.75rem 0.75rem 6.25rem;
+  background: var(--cli-bg);
+  color: var(--cli-text);
 }
 
 .top-app-bar {
@@ -14,25 +32,29 @@
 }
 
 .brand {
-  color: #00ff41;
+  color: var(--cli-amber);
   font-weight: 700;
   letter-spacing: 0.12em;
   font-size: 0.9rem;
 }
 
 .ghost-icon-button {
-  border: 1px solid #2a2a2a;
-  background: #111111;
-  color: #d2d2d2;
-  border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
+  border: 0;
+  background: transparent;
+  color: var(--cli-label);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+}
+
+.gear-icon {
+  display: block;
 }
 
 .panel {
-  background: #131313;
-  border: 1px solid #1f1f1f;
+  background: var(--cli-panel);
+  border: 1px solid var(--cli-border);
   border-radius: 16px;
   padding: 0.9rem;
 }
@@ -49,7 +71,7 @@
 
 .panel-copy {
   margin: 0;
-  color: #9a9a9a;
+  color: var(--cli-label);
   font-size: 0.84rem;
 }
 
@@ -57,24 +79,24 @@
   margin: 0 0 0.8rem;
   display: flex;
   justify-content: space-between;
-  color: #9a9a9a;
+  color: var(--cli-label);
   font-size: 0.7rem;
   letter-spacing: 0.09em;
 }
 
 .chromatic-gauge {
-  border: 1px solid #262626;
+  border: 1px solid var(--cli-border);
   border-radius: 12px;
   padding: 0.65rem 0.65rem 0.8rem;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 20% 100%,
-    #101010;
+    var(--cli-panel-alt);
 }
 
 .gauge-markers {
   display: flex;
   justify-content: space-between;
-  color: #666666;
+  color: var(--cli-muted);
   font-size: 0.62rem;
 }
 
@@ -90,8 +112,8 @@
   top: 0;
   width: 2px;
   height: 100%;
-  background: #00ff41;
-  box-shadow: 0 0 12px rgba(0, 255, 65, 0.7);
+  background: var(--cli-amber);
+  box-shadow: 0 0 12px rgba(255, 211, 0, 0.6);
 }
 
 .pitch-indicator {
@@ -105,13 +127,13 @@
 }
 
 .pitch-indicator.in-tune {
-  background: #00ff41;
-  box-shadow: 0 0 15px rgba(0, 255, 65, 0.8);
+  background: var(--cli-green);
+  box-shadow: 0 0 15px rgba(36, 194, 91, 0.75);
 }
 
 .pitch-indicator.off-pitch {
-  background: #00e3fd;
-  box-shadow: 0 0 14px rgba(0, 227, 253, 0.7);
+  background: var(--cli-cyan);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.7);
 }
 
 .note-display {
@@ -123,16 +145,16 @@
   margin: 0;
   font-size: clamp(3.2rem, 18vw, 4.8rem);
   line-height: 0.95;
-  color: #ebfff1;
+  color: var(--cli-amber);
   font-weight: 700;
   text-shadow:
-    0 0 14px rgba(0, 255, 65, 0.45),
-    0 0 26px rgba(0, 255, 65, 0.16);
+    0 0 14px rgba(255, 211, 0, 0.45),
+    0 0 26px rgba(255, 211, 0, 0.16);
 }
 
 .note-display-offset {
   margin: 0.1rem 0 0;
-  color: #9ae8f1;
+  color: var(--cli-cyan);
 }
 
 .signal-info {
@@ -142,23 +164,23 @@
 }
 
 .signal-card {
-  background: #171717;
-  border: 1px solid #262626;
+  background: var(--cli-panel-alt);
+  border: 1px solid var(--cli-border);
   border-radius: 12px;
   padding: 0.5rem 0.7rem;
 }
 
 .signal-card-green {
-  border-left: 3px solid #00ff41;
+  border-left: 3px solid var(--cli-amber);
 }
 
 .signal-card-cyan {
-  border-left: 3px solid #00e3fd;
+  border-left: 3px solid var(--cli-cyan);
 }
 
 .signal-label {
   margin: 0;
-  color: #8f8f8f;
+  color: var(--cli-label);
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -166,7 +188,7 @@
 
 .signal-value {
   margin: 0.25rem 0 0;
-  color: #f2f2f2;
+  color: var(--cli-text);
   font-size: 1rem;
 }
 
@@ -180,9 +202,9 @@
 
 .preset-button {
   flex: 0 0 auto;
-  border: 1px solid #2e2e2e;
-  background: #2a2a2a;
-  color: #ffffff;
+  border: 1px solid var(--cli-border);
+  background: var(--cli-panel-alt);
+  color: var(--cli-text);
   border-radius: 999px;
   padding: 0.5rem 0.8rem;
   font-size: 0.68rem;
@@ -196,9 +218,9 @@
 }
 
 .preset-button.active {
-  background: #00ff41;
-  color: #0d0d0d;
-  border-color: #00ff41;
+  background: var(--cli-cyan);
+  color: var(--cli-bg);
+  border-color: var(--cli-cyan);
 }
 
 .preset-grid {
@@ -207,10 +229,10 @@
 }
 
 .preset-tile {
-  border: 1px solid #2c2c2c;
+  border: 1px solid var(--cli-border);
   border-radius: 12px;
-  background: #171717;
-  color: #f1f1f1;
+  background: var(--cli-panel-alt);
+  color: var(--cli-text);
   padding: 0.8rem;
   text-align: left;
 }
@@ -222,24 +244,24 @@
 }
 
 .preset-tile small {
-  color: #8f8f8f;
+  color: var(--cli-label);
 }
 
 .preset-tile.active {
-  border-color: #00ff41;
-  box-shadow: 0 0 0 1px rgba(0, 255, 65, 0.25);
+  border-color: var(--cli-cyan);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.3);
 }
 
 .calibration-readout {
   font-size: 2.1rem;
   font-weight: 700;
-  color: #00ff41;
+  color: var(--cli-amber);
   text-align: center;
 }
 
 .calibration-slider {
   width: 100%;
-  accent-color: #00e3fd;
+  accent-color: var(--cli-cyan);
 }
 
 .calibration-steps {
@@ -249,9 +271,9 @@
 }
 
 .chip {
-  border: 1px solid #2e2e2e;
-  background: #1a1a1a;
-  color: #d5d5d5;
+  border: 1px solid var(--cli-border);
+  background: var(--cli-panel-alt);
+  color: var(--cli-label);
   border-radius: 999px;
   padding: 0.35rem 0.15rem;
   font-size: 0.68rem;
@@ -261,9 +283,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #262626;
+  border: 1px solid var(--cli-border);
   border-radius: 12px;
-  background: #171717;
+  background: var(--cli-panel-alt);
   padding: 0.75rem;
 }
 
@@ -274,22 +296,22 @@
 .toggle-row input {
   width: 1rem;
   height: 1rem;
-  accent-color: #00ff41;
+  accent-color: var(--cli-cyan);
 }
 
 .spectral-graph {
   margin-top: 0.8rem;
-  border: 1px solid #242424;
+  border: 1px solid var(--cli-border);
   border-radius: 12px;
   padding: 0.6rem;
-  background: #101010;
+  background: var(--cli-panel-alt);
 }
 
 .spectral-title {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  color: #8f8f8f;
+  color: var(--cli-label);
   font-size: 0.65rem;
   letter-spacing: 0.08em;
 }
@@ -298,8 +320,8 @@
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: #00ff41;
-  box-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
+  background: var(--cli-cyan);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
 }
 
 .spectral-bars {
@@ -313,7 +335,7 @@
 
 .spectral-bar {
   border-radius: 2px 2px 0 0;
-  background: linear-gradient(180deg, #00e3fd 0%, #00ff41 100%);
+  background: linear-gradient(180deg, var(--cli-cyan) 0%, var(--cli-magenta) 100%);
   transition: height 140ms linear;
 }
 
@@ -323,8 +345,8 @@
   border: 0;
   border-radius: 999px;
   padding: 0.85rem 1rem;
-  background: #00ff41;
-  color: #0b0b0b;
+  background: var(--cli-amber);
+  color: var(--cli-bg);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -332,7 +354,7 @@
 
 .error {
   margin: 0.7rem 0 0;
-  color: #ff7b7b;
+  color: var(--cli-danger);
 }
 
 .bottom-nav {
@@ -343,17 +365,17 @@
   max-width: 430px;
   margin: 0 auto;
   padding: 0.6rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  background: #0e0e0e;
-  border-top: 1px solid #212121;
+  background: var(--cli-bg);
+  border-top: 1px solid var(--cli-border);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
 }
 
 .nav-item {
-  border: 1px solid #2e2e2e;
-  background: #1a1a1a;
-  color: #d5d5d5;
+  border: 1px solid var(--cli-border);
+  background: var(--cli-panel-alt);
+  color: var(--cli-label);
   border-radius: 999px;
   font-size: 0.66rem;
   letter-spacing: 0.06em;
@@ -361,9 +383,9 @@
 }
 
 .nav-item.active {
-  border-color: #00e3fd;
-  color: #0f0f0f;
-  background: #00e3fd;
+  border-color: var(--cli-cyan);
+  color: var(--cli-bg);
+  background: var(--cli-cyan);
 }
 
 @media (min-width: 431px) {

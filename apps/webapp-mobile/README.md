@@ -1,8 +1,8 @@
-# tuner-web-d-tunner
+# NovaTuner
 
-D tunner web tuner client built with React, TypeScript, and Vite.
+NovaTuner web tuner client built with React, TypeScript, and Vite.
 
-Mobile-first Precision Tuner implementation generated from D tunner component specs.
+Mobile-first Precision Tuner implementation generated from NovaTuner component specs.
 
 ## WASM Build
 
