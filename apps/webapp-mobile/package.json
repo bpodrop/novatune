@@ -5,13 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "pretypecheck": "npm run wasm:build",
-    "prebuild": "npm run wasm:build",
     "build": "npm run typecheck && vite build",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
-    "pretest": "npm run wasm:build",
     "test": "vitest run",
     "test:watch": "vitest",
     "wasm:build": "node ./scripts/build-wasm-from-workspace.mjs",

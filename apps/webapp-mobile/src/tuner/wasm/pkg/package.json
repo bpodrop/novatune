@@ -1,0 +1,16 @@
+{
+  "name": "tuner-dsp-web",
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "tuner_web_bridge_bg.wasm",
+    "tuner_web_bridge.js",
+    "tuner_web_bridge.d.ts"
+  ],
+  "main": "tuner_web_bridge.js",
+  "types": "tuner_web_bridge.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

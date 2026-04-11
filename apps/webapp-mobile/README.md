@@ -6,12 +6,24 @@ Mobile-first Precision Tuner implementation generated from NovaTuner component s
 
 ## WASM Build
 
-WASM bridge artifacts in `src/tuner/wasm/pkg` are generated directly from monorepo crate:
+WASM bridge artifacts live in `src/tuner/wasm/pkg` and are generated from:
 - crate: `crates/tuner-dsp-web`
 - build command: `npm run wasm:build`
 - build script: `scripts/build-wasm-from-workspace.mjs`
 
-This keeps CLI, web, and embedded code paths aligned on the same commit.
+For short-term CI/CD stability (Cloudflare Pages), these generated artifacts are committed.
+When DSP code changes, regenerate and commit `src/tuner/wasm/pkg/*`.
+
+## Cloudflare Pages (Short Term)
+
+Use these settings for `apps/webapp-mobile`:
+- Framework preset: `Vite`
+- Root directory: `apps/webapp-mobile`
+- Build command: `npm ci && npm run build`
+- Build output directory: `dist`
+- Node.js version: `20`
+
+Current build no longer runs `wasm:build` automatically, so Pages does not need Rust/wasm-pack.
 
 ## Tuning Config Contract
 
