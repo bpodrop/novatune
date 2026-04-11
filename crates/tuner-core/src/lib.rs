@@ -1,10 +1,12 @@
 pub mod cents;
 pub mod frequency;
+pub mod mapping;
 pub mod note;
 pub mod tuning;
 
 pub use cents::Cents;
 pub use frequency::FrequencyHz;
+pub use mapping::{MappedDetection, TuningSession, resolve_ui_state};
 pub use note::{Note, NoteEstimate, NoteName};
 pub use tuning::{
     DROP_D, E_STANDARD, PresetId, PresetMatch, STANDARD_TUNING, TargetString, TuningPreset,

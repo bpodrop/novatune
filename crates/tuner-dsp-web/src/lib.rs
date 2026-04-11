@@ -2,7 +2,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Mutex, OnceLock};
 
 use serde::{Deserialize, Serialize};
-use tuner_core::{match_frequency_to_preset, preset_by_id, Note, PitchDetectionResult, PresetId, UiState};
+use tuner_core::{Note, PitchDetectionResult, TuningSession, UiState, resolve_ui_state};
 use tuner_dsp_algo::{PitchDetector, PitchDetectorConfig};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -37,56 +37,18 @@ impl From<PitchDetectionResult> for DetectionOutput {
 
 fn map_detection_for_tuning(
     value: PitchDetectionResult,
-    preset_id: PresetId,
-    calibration_hz: f32,
+    tuning_session: &TuningSession,
 ) -> DetectionOutput {
-    let safe_calibration_hz = if calibration_hz.is_finite() && calibration_hz > 0.0 {
-        calibration_hz
-    } else {
-        440.0
-    };
-    let normalized_frequency_hz = value.frequency_hz * (440.0 / safe_calibration_hz);
-    let preset = preset_by_id(preset_id);
-    let maybe_match = match_frequency_to_preset(normalized_frequency_hz, preset, 300.0);
-
-    let (cents_off, note_name) = match maybe_match {
-        Some(matched) => (matched.cents_from_target, matched.matched_string.label.to_string()),
-        None => {
-            let note_estimate = Note::estimate(normalized_frequency_hz);
-            let fallback_cents = note_estimate.as_ref().map(|note| note.cents_offset).unwrap_or(0.0);
-            let fallback_name = note_estimate
-                .as_ref()
-                .map(|note| note.note_name.clone())
-                .unwrap_or_else(|| "--".to_string());
-            (fallback_cents, fallback_name)
-        }
-    };
-    let ui_state = resolve_ui_state(value.confidence, value.clarity, cents_off);
+    let mapped = tuning_session.map_detection(value);
 
     DetectionOutput {
-        frequency_hz: value.frequency_hz,
-        confidence: value.confidence,
-        clarity: value.clarity,
-        rms: value.rms,
-        cents_off,
-        note_name,
-        ui_state: ui_state_label(ui_state).to_string(),
-    }
-}
-
-fn resolve_ui_state(confidence: f32, clarity: f32, cents_off: f32) -> UiState {
-    if confidence < 0.60 {
-        return UiState::Searching;
-    }
-    if clarity < 0.70 {
-        return UiState::Unstable;
-    }
-    if cents_off < -3.0 {
-        UiState::TooLow
-    } else if cents_off > 3.0 {
-        UiState::TooHigh
-    } else {
-        UiState::InTune
+        frequency_hz: mapped.frequency_hz,
+        confidence: mapped.confidence,
+        clarity: mapped.clarity,
+        rms: mapped.rms,
+        cents_off: mapped.cents_off,
+        note_name: mapped.note_name,
+        ui_state: ui_state_label(mapped.ui_state).to_string(),
     }
 }
 
@@ -105,8 +67,7 @@ fn ui_state_label(ui_state: UiState) -> &'static str {
 struct DetectorHandle {
     detector: PitchDetector,
     config: PitchDetectorConfig,
-    preset_id: PresetId,
-    calibration_hz: f32,
+    tuning_session: TuningSession,
     pending_samples: Vec<f32>,
     outputs: VecDeque<DetectionOutput>,
 }
@@ -166,8 +127,7 @@ pub fn new_detector(sample_rate: u32, frame_size: usize, hop_size: usize) -> u32
         DetectorHandle {
             detector: PitchDetector::new(config),
             config,
-            preset_id: PresetId::EStandard,
-            calibration_hz: 440.0,
+            tuning_session: TuningSession::new(),
             pending_samples: Vec::new(),
             outputs: VecDeque::new(),
         },
@@ -202,11 +162,9 @@ pub fn push_samples(detector_id: u32, samples: &[f32]) -> usize {
     while handle.pending_samples.len() >= handle.config.frame_size {
         let frame = &handle.pending_samples[..handle.config.frame_size];
         if let Some(output) = handle.detector.detect_pitch(frame) {
-            handle.outputs.push_back(map_detection_for_tuning(
-                output,
-                handle.preset_id,
-                handle.calibration_hz,
-            ));
+            handle
+                .outputs
+                .push_back(map_detection_for_tuning(output, &handle.tuning_session));
             produced += 1;
         }
 
@@ -241,10 +199,6 @@ pub fn reset(detector_id: u32) -> bool {
 }
 
 pub fn set_preset(detector_id: u32, preset_id: &str) -> bool {
-    let Some(parsed) = PresetId::parse(preset_id) else {
-        return false;
-    };
-
     let mut lock = registry()
         .lock()
         .expect("detector registry lock should not be poisoned");
@@ -252,15 +206,10 @@ pub fn set_preset(detector_id: u32, preset_id: &str) -> bool {
         return false;
     };
 
-    handle.preset_id = parsed;
-    true
+    handle.tuning_session.set_preset(preset_id)
 }
 
 pub fn set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
-    if !calibration_hz.is_finite() || calibration_hz <= 0.0 {
-        return false;
-    }
-
     let mut lock = registry()
         .lock()
         .expect("detector registry lock should not be poisoned");
@@ -268,8 +217,7 @@ pub fn set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
         return false;
     };
 
-    handle.calibration_hz = calibration_hz;
-    true
+    handle.tuning_session.set_calibration_hz(calibration_hz)
 }
 
 pub fn shutdown(detector_id: u32) -> bool {

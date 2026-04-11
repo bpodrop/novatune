@@ -1,6 +1,4 @@
-use tuner_core::{
-    Note, PitchDetectionResult, PresetId, UiState, match_frequency_to_preset, preset_by_id,
-};
+use crate::{Note, PitchDetectionResult, PresetId, UiState, match_frequency_to_preset, preset_by_id};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MappedDetection {
@@ -71,7 +69,10 @@ impl TuningSession {
         );
 
         let (cents_off, note_name) = match preset_match {
-            Some(matched) => (matched.cents_from_target, matched.matched_string.label.to_string()),
+            Some(matched) => (
+                matched.cents_from_target,
+                matched.matched_string.label.to_string(),
+            ),
             None => {
                 let note_estimate = Note::estimate(normalized_frequency_hz);
                 let fallback_cents = note_estimate
@@ -98,7 +99,7 @@ impl TuningSession {
     }
 }
 
-fn resolve_ui_state(confidence: f32, clarity: f32, cents_off: f32) -> UiState {
+pub fn resolve_ui_state(confidence: f32, clarity: f32, cents_off: f32) -> UiState {
     if confidence < 0.60 {
         return UiState::Searching;
     }
@@ -117,7 +118,7 @@ fn resolve_ui_state(confidence: f32, clarity: f32, cents_off: f32) -> UiState {
 #[cfg(test)]
 mod tests {
     use super::TuningSession;
-    use tuner_core::MeasuredPitch;
+    use crate::MeasuredPitch;
 
     fn measured_pitch(frequency_hz: f32) -> MeasuredPitch {
         MeasuredPitch {
