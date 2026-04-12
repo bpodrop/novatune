@@ -132,10 +132,25 @@ function ChromaticGauge({ centsOff }: { centsOff: number | null }) {
 }
 
 function NoteDisplay({ noteName, centsOff }: { noteName: string; centsOff: number | null }) {
+  let status = 'waiting signal'
+  if (centsOff !== null) {
+    const absolute = Math.abs(centsOff)
+    if (absolute <= 3) {
+      status = 'in tune'
+    } else if (centsOff < 0) {
+      status = `${absolute.toFixed(1)} ct flat`
+    } else {
+      status = `${absolute.toFixed(1)} ct sharp`
+    }
+  }
+
   return (
     <section className="note-display">
       <p className="note-display-main">{noteName}</p>
-      <p className="note-display-offset">{centsOff === null ? '--' : `${centsOff >= 0 ? '+' : ''}${centsOff.toFixed(1)}`}</p>
+      <p className="note-display-offset">
+        {centsOff === null ? '-- ct' : `${centsOff >= 0 ? '+' : ''}${centsOff.toFixed(1)} ct`}
+      </p>
+      <p className="note-display-status">{status}</p>
     </section>
   )
 }
