@@ -163,12 +163,12 @@ function SignalInfo({
   centsOff: number | null
 }) {
   return (
-    <section className="signal-info">
-      <article className="signal-card signal-card-green">
+    <section className="signal-summary">
+      <article className="signal-metric signal-metric-frequency">
         <p className="signal-label">Frequency</p>
         <p className="signal-value">{frequencyHz === null ? '--' : `${frequencyHz.toFixed(2)} Hz`}</p>
       </article>
-      <article className="signal-card signal-card-cyan">
+      <article className="signal-metric signal-metric-tolerance">
         <p className="signal-label">Tolerance</p>
         <p className="signal-value">{centsOff === null ? '±-- ct' : `±${Math.abs(centsOff).toFixed(2)} ct`}</p>
       </article>
@@ -504,11 +504,6 @@ function App() {
         <NoteDisplay noteName={detection?.noteName ?? '--'} centsOff={detection?.centsOff ?? null} />
         <SignalInfo frequencyHz={detection?.frequencyHz ?? null} centsOff={detection?.centsOff ?? null} />
         <TuningPresetStrip selectedPreset={selectedPreset} onSelect={setSelectedPreset} />
-        <SpectralGraph
-          frequencyHz={detection?.frequencyHz ?? null}
-          confidence={detection?.confidence ?? null}
-          clarity={detection?.clarity ?? null}
-        />
 
         <button
           className="primary"
@@ -522,6 +517,12 @@ function App() {
         >
           {running ? 'Stop microphone' : 'Start microphone'}
         </button>
+
+        <SpectralGraph
+          frequencyHz={detection?.frequencyHz ?? null}
+          confidence={detection?.confidence ?? null}
+          clarity={detection?.clarity ?? null}
+        />
 
         {error ? <p className="error">Error: {error}</p> : null}
       </section>
