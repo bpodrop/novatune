@@ -152,24 +152,78 @@
     0 0 26px rgba(255, 211, 0, 0.35);
 }
 
-.pitch-indicator {
+.gauge-indicator {
   position: absolute;
   top: 8px;
   width: 12px;
   height: 28px;
   border-radius: 8px;
   margin-left: -6px;
-  transition: left 150ms linear, background-color 180ms ease, box-shadow 180ms ease;
+  transition:
+    left 150ms linear,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 140ms ease;
 }
 
-.pitch-indicator.in-tune {
+.gauge-indicator-left {
+  transform: translateX(-1px);
+}
+
+.gauge-indicator-right {
+  transform: translateX(1px);
+}
+
+.gauge-indicator.in-tune {
   background: var(--cli-green);
   box-shadow: 0 0 18px rgba(36, 194, 91, 0.82);
 }
 
-.pitch-indicator.off-pitch {
+.gauge-indicator.too-low {
   background: var(--cli-cyan);
   box-shadow: 0 0 17px rgba(0, 229, 255, 0.8);
+}
+
+.gauge-indicator.too-high {
+  background: var(--cli-magenta);
+  box-shadow: 0 0 17px rgba(255, 42, 109, 0.82);
+}
+
+.gauge-indicator.no-signal {
+  background: rgba(140, 152, 170, 0.75);
+  box-shadow: 0 0 10px rgba(140, 152, 170, 0.35);
+  opacity: 0.7;
+}
+
+.gauge-guidance {
+  margin-top: 0.45rem;
+  min-height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--cli-label);
+}
+
+.gauge-guidance-arrow {
+  width: 0.9rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.gauge-guidance.in-tune {
+  color: var(--cli-green);
+}
+
+.gauge-guidance.too-low {
+  color: var(--cli-cyan);
+}
+
+.gauge-guidance.too-high {
+  color: var(--cli-magenta);
 }
 
 .note-display {
@@ -193,15 +247,6 @@
   color: var(--cli-cyan);
   font-size: 1.05rem;
   line-height: 1.1;
-}
-
-.note-display-status {
-  margin: 0.22rem 0 0;
-  min-height: 1.1rem;
-  color: var(--cli-label);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .signal-summary {
