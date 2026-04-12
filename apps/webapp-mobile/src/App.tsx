@@ -506,7 +506,7 @@ function App() {
         <TuningPresetStrip selectedPreset={selectedPreset} onSelect={setSelectedPreset} />
 
         <button
-          className="primary"
+          className={running ? 'primary primary-running' : 'primary'}
           type="button"
           onClick={() => {
             setError(null)
