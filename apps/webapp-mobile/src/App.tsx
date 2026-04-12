@@ -11,6 +11,7 @@ import {
 type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported'
 type ViewId = 'tuner' | 'presets' | 'calibration' | 'settings'
 type PresetId = 'standard_e' | 'drop_d' | 'half_step'
+type ThemeMode = 'dark' | 'light'
 type PresetString = { label: string; frequencyHz: number }
 type PresetProfile = { id: PresetId; label: string; strings: PresetString[] }
 
@@ -319,6 +320,8 @@ function CalibrationView({
 }
 
 function SettingsView({
+  theme,
+  setTheme,
   haptics,
   setHaptics,
   keepAwake,
@@ -328,6 +331,8 @@ function SettingsView({
   minClarity,
   setMinClarity,
 }: {
+  theme: ThemeMode
+  setTheme: (value: ThemeMode) => void
   haptics: boolean
   setHaptics: (value: boolean) => void
   keepAwake: boolean
@@ -340,6 +345,46 @@ function SettingsView({
   return (
     <section className="panel stack">
       <h2 className="panel-title">Settings</h2>
+      <section className="toggle-row">
+        <span>Theme</span>
+        <div className="theme-toggle" role="group" aria-label="Theme mode">
+          <button
+            type="button"
+            className={theme === 'dark' ? 'theme-toggle-button active' : 'theme-toggle-button'}
+            aria-label="Dark mode"
+            aria-pressed={theme === 'dark'}
+            onClick={() => setTheme('dark')}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+              <path
+                d="M12 3.5a8.5 8.5 0 1 0 8.3 10.3 7.2 7.2 0 0 1-8.8-8.8A8.4 8.4 0 0 0 12 3.5Z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={theme === 'light' ? 'theme-toggle-button active' : 'theme-toggle-button'}
+            aria-label="Light mode"
+            aria-pressed={theme === 'light'}
+            onClick={() => setTheme('light')}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="4.3" fill="currentColor" />
+              <g stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+                <line x1="12" y1="2.8" x2="12" y2="5.1" />
+                <line x1="12" y1="18.9" x2="12" y2="21.2" />
+                <line x1="2.8" y1="12" x2="5.1" y2="12" />
+                <line x1="18.9" y1="12" x2="21.2" y2="12" />
+                <line x1="5.6" y1="5.6" x2="7.3" y2="7.3" />
+                <line x1="16.7" y1="16.7" x2="18.4" y2="18.4" />
+                <line x1="16.7" y1="7.3" x2="18.4" y2="5.6" />
+                <line x1="5.6" y1="18.4" x2="7.3" y2="16.7" />
+              </g>
+            </svg>
+          </button>
+        </div>
+      </section>
       <label className="toggle-row">
         <span>Haptic feedback</span>
         <input type="checkbox" checked={haptics} onChange={(e) => setHaptics(e.target.checked)} />
@@ -389,6 +434,13 @@ function SettingsView({
 }
 
 function App() {
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') {
+      return 'dark'
+    }
+    const stored = window.localStorage.getItem('novatuner.theme')
+    return stored === 'light' ? 'light' : 'dark'
+  })
   const [activeView, setActiveView] = useState<ViewId>('tuner')
   const [selectedPreset, setSelectedPreset] = useState<PresetId>('standard_e')
   const [calibrationHz, setCalibrationHz] = useState(440)
@@ -409,6 +461,13 @@ function App() {
   const calibrationRef = useRef<number>(calibrationHz)
   const minRmsRef = useRef<number>(minRms)
   const minClarityRef = useRef<number>(minClarity)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    window.localStorage.setItem('novatuner.theme', theme)
+  }, [theme])
 
   useEffect(() => {
     if (!running) {
@@ -504,7 +563,7 @@ function App() {
   }, [calibrationHz, minClarity, minRms, selectedPreset])
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-theme={theme}>
       <TopAppBar onOpenSettings={() => setActiveView('settings')} />
 
       <section className="panel tuner-panel" hidden={activeView !== 'tuner'}>
@@ -555,6 +614,8 @@ function App() {
 
       {activeView === 'settings' ? (
         <SettingsView
+          theme={theme}
+          setTheme={setTheme}
           haptics={haptics}
           setHaptics={setHaptics}
           keepAwake={keepAwake}

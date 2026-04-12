@@ -1,17 +1,83 @@
 :root {
-  --cli-bg: #000000;
-  --cli-panel: #101317;
-  --cli-panel-alt: #0c1014;
-  --cli-chrome: #383e46;
-  --cli-border: #262c34;
-  --cli-label: #8c98aa;
-  --cli-muted: #5c626a;
-  --cli-text: #f2f6fb;
-  --cli-cyan: #00e5ff;
-  --cli-amber: #ffd300;
-  --cli-magenta: #ff2a6d;
+  --cli-bg: #0a0c10;
+  --cli-panel: #121826;
+  --cli-panel-alt: #1a202c;
+  --cli-chrome: #4a5568;
+  --cli-border: #344154;
+  --cli-label: #a0a8b8;
+  --cli-muted: #707888;
+  --cli-text: #f0f4ff;
+  --cli-cyan: #00f0ff;
+  --cli-amber: #ffbf00;
+  --cli-magenta: #ff1f9c;
   --cli-green: #24c25b;
-  --cli-danger: #ff7b7b;
+  --cli-danger: #ff4d4f;
+
+  --cli-icon-button-border: rgba(52, 65, 84, 0.85);
+  --cli-icon-button-bg: rgba(18, 24, 38, 0.82);
+  --cli-icon-button-fg: #9aa6b8;
+  --cli-gauge-marker: #748198;
+  --cli-grid-line: rgba(255, 255, 255, 0.05);
+  --cli-center-zone-soft: rgba(255, 191, 0, 0.08);
+  --cli-center-zone-strong: rgba(255, 191, 0, 0.14);
+  --cli-soft-border: rgba(52, 65, 84, 0.78);
+  --cli-soft-border-mid: rgba(52, 65, 84, 0.75);
+  --cli-soft-border-lite: rgba(52, 65, 84, 0.62);
+  --cli-divider-soft: rgba(255, 255, 255, 0.06);
+  --cli-preset-text: #e3eaf4;
+  --cli-cyan-glow: rgba(0, 240, 255, 0.8);
+  --cli-nav-bg: rgba(10, 12, 16, 0.88);
+  --cli-nav-border: rgba(52, 65, 84, 0.7);
+  --cli-nav-item-text: #6f7e94;
+  --cli-accent-active-bg: rgba(0, 240, 255, 0.9);
+  --cli-accent-active-border: rgba(0, 240, 255, 0.7);
+  --cli-accent-active-ring: rgba(0, 240, 255, 0.22);
+  --cli-primary-running: #f0c400;
+  --cli-no-signal-indicator: rgba(140, 152, 170, 0.75);
+  --cli-no-signal-glow: rgba(140, 152, 170, 0.35);
+  --cli-on-primary: #0a0c10;
+  --cli-on-accent: #0a0c10;
+}
+
+.app-shell[data-theme='light'] {
+  --cli-bg: #f4f7fb;
+  --cli-panel: #ffffff;
+  --cli-panel-alt: #eef3f9;
+  --cli-chrome: #9aa9bc;
+  --cli-border: #c7d1df;
+  --cli-label: #4b5d73;
+  --cli-muted: #6f8299;
+  --cli-text: #111827;
+  --cli-cyan: #00a8c5;
+  --cli-amber: #d19000;
+  --cli-magenta: #c21884;
+  --cli-green: #1f9d52;
+  --cli-danger: #dc2626;
+
+  --cli-icon-button-border: rgba(148, 163, 184, 0.55);
+  --cli-icon-button-bg: rgba(255, 255, 255, 0.9);
+  --cli-icon-button-fg: #4b5d73;
+  --cli-gauge-marker: #60748c;
+  --cli-grid-line: rgba(15, 23, 42, 0.08);
+  --cli-center-zone-soft: rgba(209, 144, 0, 0.12);
+  --cli-center-zone-strong: rgba(209, 144, 0, 0.2);
+  --cli-soft-border: rgba(148, 163, 184, 0.62);
+  --cli-soft-border-mid: rgba(148, 163, 184, 0.58);
+  --cli-soft-border-lite: rgba(148, 163, 184, 0.52);
+  --cli-divider-soft: rgba(15, 23, 42, 0.1);
+  --cli-preset-text: #1f2937;
+  --cli-cyan-glow: rgba(0, 168, 197, 0.45);
+  --cli-nav-bg: rgba(244, 247, 251, 0.92);
+  --cli-nav-border: rgba(148, 163, 184, 0.55);
+  --cli-nav-item-text: #60748c;
+  --cli-accent-active-bg: #00a8c5;
+  --cli-accent-active-border: #0099b3;
+  --cli-accent-active-ring: rgba(0, 168, 197, 0.3);
+  --cli-primary-running: #c68500;
+  --cli-no-signal-indicator: rgba(107, 114, 128, 0.58);
+  --cli-no-signal-glow: rgba(107, 114, 128, 0.25);
+  --cli-on-primary: #111827;
+  --cli-on-accent: #ffffff;
 }
 
 .app-shell {
@@ -47,9 +113,9 @@
 }
 
 .ghost-icon-button {
-  border: 1px solid rgba(38, 44, 52, 0.85);
-  background: rgba(16, 19, 23, 0.82);
-  color: #9aa6b8;
+  border: 1px solid var(--cli-icon-button-border);
+  background: var(--cli-icon-button-bg);
+  color: var(--cli-icon-button-fg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -112,13 +178,13 @@
   border-radius: 12px;
   padding: 0.7rem 0.65rem 0.95rem;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 20% 100%,
+    linear-gradient(90deg, var(--cli-grid-line) 1px, transparent 1px) 0 0 / 20% 100%,
     linear-gradient(
       90deg,
       transparent 44%,
-      rgba(255, 211, 0, 0.08) 48%,
-      rgba(255, 211, 0, 0.14) 50%,
-      rgba(255, 211, 0, 0.08) 52%,
+      var(--cli-center-zone-soft) 48%,
+      var(--cli-center-zone-strong) 50%,
+      var(--cli-center-zone-soft) 52%,
       transparent 56%
     ),
     var(--cli-panel-alt);
@@ -127,7 +193,7 @@
 .gauge-markers {
   display: flex;
   justify-content: space-between;
-  color: #748198;
+  color: var(--cli-gauge-marker);
   font-size: 0.66rem;
   letter-spacing: 0.03em;
   font-weight: 600;
@@ -190,8 +256,8 @@
 }
 
 .gauge-indicator.no-signal {
-  background: rgba(140, 152, 170, 0.75);
-  box-shadow: 0 0 10px rgba(140, 152, 170, 0.35);
+  background: var(--cli-no-signal-indicator);
+  box-shadow: 0 0 10px var(--cli-no-signal-glow);
   opacity: 0.7;
 }
 
@@ -251,7 +317,7 @@
 
 .signal-summary {
   background: var(--cli-panel-alt);
-  border: 1px solid rgba(38, 44, 52, 0.78);
+  border: 1px solid var(--cli-soft-border);
   border-radius: 12px;
   padding: 0.5rem 0.25rem;
   display: grid;
@@ -279,7 +345,7 @@
 
 .signal-metric-frequency {
   border-left: 3px solid var(--cli-amber);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid var(--cli-divider-soft);
 }
 
 .signal-metric-tolerance {
@@ -296,9 +362,9 @@
 
 .preset-button {
   flex: 0 0 auto;
-  border: 1px solid rgba(38, 44, 52, 0.75);
+  border: 1px solid var(--cli-soft-border-mid);
   background: var(--cli-panel-alt);
-  color: #e3eaf4;
+  color: var(--cli-preset-text);
   border-radius: 999px;
   min-height: 2rem;
   padding: 0.4rem 0.78rem;
@@ -314,7 +380,7 @@
 
 .preset-button.active {
   background: var(--cli-cyan);
-  color: var(--cli-bg);
+  color: var(--cli-on-accent);
   border-color: var(--cli-cyan);
 }
 
@@ -344,7 +410,7 @@
 
 .preset-tile.active {
   border-color: var(--cli-cyan);
-  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
 }
 
 .calibration-readout {
@@ -394,6 +460,34 @@
   accent-color: var(--cli-cyan);
 }
 
+.theme-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.25rem;
+  background: var(--cli-panel);
+  border: 1px solid var(--cli-soft-border-mid);
+  border-radius: 999px;
+  padding: 0.18rem;
+}
+
+.theme-toggle-button {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cli-label);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-button.active {
+  background: var(--cli-cyan);
+  color: var(--cli-on-accent);
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
+}
+
 .tuning-control {
   border: 1px solid var(--cli-border);
   border-radius: 12px;
@@ -423,7 +517,7 @@
 
 .spectral-graph {
   margin-top: 0.6rem;
-  border: 1px solid rgba(38, 44, 52, 0.62);
+  border: 1px solid var(--cli-soft-border-lite);
   border-radius: 12px;
   padding: 0.52rem;
   background: var(--cli-panel-alt);
@@ -444,7 +538,7 @@
   height: 0.45rem;
   border-radius: 50%;
   background: var(--cli-cyan);
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+  box-shadow: 0 0 8px var(--cli-cyan-glow);
 }
 
 .spectral-bars {
@@ -470,7 +564,7 @@
   border-radius: 999px;
   padding: 0.85rem 1rem;
   background: var(--cli-amber);
-  color: var(--cli-bg);
+  color: var(--cli-on-primary);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -478,7 +572,7 @@
 }
 
 .primary-running {
-  background: #f0c400;
+  background: var(--cli-primary-running);
   box-shadow: 0 8px 20px rgba(255, 211, 0, 0.14);
 }
 
@@ -499,8 +593,8 @@
     max(0.5rem, env(safe-area-inset-right, 0px))
     calc(0.45rem + env(safe-area-inset-bottom, 0px))
     max(0.5rem, env(safe-area-inset-left, 0px));
-  background: rgba(0, 0, 0, 0.88);
-  border-top: 1px solid rgba(38, 44, 52, 0.7);
+  background: var(--cli-nav-bg);
+  border-top: 1px solid var(--cli-nav-border);
   backdrop-filter: blur(8px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -508,9 +602,9 @@
 }
 
 .nav-item {
-  border: 1px solid rgba(38, 44, 52, 0.65);
+  border: 1px solid var(--cli-soft-border-mid);
   background: var(--cli-panel-alt);
-  color: #6f7e94;
+  color: var(--cli-nav-item-text);
   border-radius: 999px;
   font-size: 0.66rem;
   letter-spacing: 0.06em;
@@ -519,10 +613,10 @@
 }
 
 .nav-item.active {
-  border-color: rgba(0, 229, 255, 0.7);
-  color: var(--cli-bg);
-  background: rgba(0, 229, 255, 0.9);
-  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.22);
+  border-color: var(--cli-accent-active-border);
+  color: var(--cli-on-accent);
+  background: var(--cli-accent-active-bg);
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
 }
 
 @media (min-width: 431px) {
