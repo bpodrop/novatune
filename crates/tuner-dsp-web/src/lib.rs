@@ -226,6 +226,28 @@ pub fn set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
     handle.tuning_session.set_calibration_hz(calibration_hz)
 }
 
+pub fn set_min_rms(detector_id: u32, min_rms: f32) -> bool {
+    let mut lock = registry()
+        .lock()
+        .expect("detector registry lock should not be poisoned");
+    let Some(handle) = lock.detectors.get_mut(&detector_id) else {
+        return false;
+    };
+
+    handle.detector.set_min_rms(min_rms)
+}
+
+pub fn set_min_clarity(detector_id: u32, min_clarity: f32) -> bool {
+    let mut lock = registry()
+        .lock()
+        .expect("detector registry lock should not be poisoned");
+    let Some(handle) = lock.detectors.get_mut(&detector_id) else {
+        return false;
+    };
+
+    handle.detector.set_min_clarity(min_clarity)
+}
+
 pub fn shutdown(detector_id: u32) -> bool {
     let mut lock = registry()
         .lock()
@@ -273,5 +295,15 @@ mod wasm {
     #[wasm_bindgen(js_name = set_calibration_hz)]
     pub fn wasm_set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
         super::set_calibration_hz(detector_id, calibration_hz)
+    }
+
+    #[wasm_bindgen(js_name = set_min_rms)]
+    pub fn wasm_set_min_rms(detector_id: u32, min_rms: f32) -> bool {
+        super::set_min_rms(detector_id, min_rms)
+    }
+
+    #[wasm_bindgen(js_name = set_min_clarity)]
+    pub fn wasm_set_min_clarity(detector_id: u32, min_clarity: f32) -> bool {
+        super::set_min_clarity(detector_id, min_clarity)
     }
 }

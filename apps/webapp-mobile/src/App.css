@@ -306,6 +306,33 @@
   accent-color: var(--cli-cyan);
 }
 
+.tuning-control {
+  border: 1px solid var(--cli-border);
+  border-radius: 12px;
+  background: var(--cli-panel-alt);
+  padding: 0.75rem;
+}
+
+.tuning-control-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--cli-text);
+  font-size: 0.9rem;
+}
+
+.tuning-control-header strong {
+  color: var(--cli-cyan);
+  font-size: 0.95rem;
+}
+
+.tuning-control-copy {
+  margin: 0.45rem 0 0;
+  color: var(--cli-label);
+  font-size: 0.74rem;
+}
+
 .spectral-graph {
   margin-top: 0.8rem;
   border: 1px solid var(--cli-border);

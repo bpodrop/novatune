@@ -1,7 +1,1 @@
 *
-!.gitignore
-!package.json
-!tuner_web_bridge.js
-!tuner_web_bridge.d.ts
-!tuner_web_bridge_bg.wasm
-!tuner_web_bridge_bg.wasm.d.ts

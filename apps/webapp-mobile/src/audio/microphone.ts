@@ -22,20 +22,36 @@ export async function startMicrophoneStream(
 
   const context = new AudioContext()
   const source = context.createMediaStreamSource(stream)
-  const processor = context.createScriptProcessor(frameSize, 1, 1)
+  await context.audioWorklet.addModule(new URL('./microphoneProcessor.js', import.meta.url))
+  const processor = new AudioWorkletNode(context, 'microphone-processor', {
+    channelCount: 1,
+    numberOfInputs: 1,
+    numberOfOutputs: 1,
+    outputChannelCount: [1],
+    processorOptions: {
+      frameSize,
+    },
+  })
+  const silentGain = context.createGain()
+  silentGain.gain.value = 0
 
-  processor.onaudioprocess = (event) => {
-    const channel = event.inputBuffer.getChannelData(0)
-    onSamples(new Float32Array(channel))
+  processor.port.onmessage = (event) => {
+    const samples = event.data
+    if (samples instanceof Float32Array) {
+      onSamples(samples)
+    }
   }
 
   source.connect(processor)
-  processor.connect(context.destination)
+  processor.connect(silentGain)
+  silentGain.connect(context.destination)
 
   return {
     sampleRate: context.sampleRate,
     stop: () => {
+      processor.port.onmessage = null
       processor.disconnect()
+      silentGain.disconnect()
       source.disconnect()
       stream.getTracks().forEach((track) => track.stop())
       void context.close()
