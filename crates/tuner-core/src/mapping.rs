@@ -1,4 +1,6 @@
-use crate::{Note, PitchDetectionResult, PresetId, UiState, match_frequency_to_preset, preset_by_id};
+use crate::{
+    Note, PitchDetectionResult, PresetId, UiState, match_frequency_to_preset, preset_by_id,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MappedDetection {

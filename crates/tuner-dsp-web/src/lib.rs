@@ -19,8 +19,14 @@ pub struct DetectionOutput {
 impl From<PitchDetectionResult> for DetectionOutput {
     fn from(value: PitchDetectionResult) -> Self {
         let note_estimate = Note::estimate(value.frequency_hz);
-        let cents_off = note_estimate.as_ref().map(|note| note.cents_offset).unwrap_or(0.0);
-        let note_name = note_estimate.as_ref().map(|note| note.note_name.clone()).unwrap_or_else(|| "--".to_string());
+        let cents_off = note_estimate
+            .as_ref()
+            .map(|note| note.cents_offset)
+            .unwrap_or(0.0);
+        let note_name = note_estimate
+            .as_ref()
+            .map(|note| note.note_name.clone())
+            .unwrap_or_else(|| "--".to_string());
         let ui_state = resolve_ui_state(value.confidence, value.clarity, cents_off);
 
         Self {

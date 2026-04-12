@@ -22,7 +22,11 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match parse_cli(&args) {
         Ok(Command::Strings { preset, a4_hz }) => print_tuning(preset, a4_hz),
-        Ok(Command::Analyze { mode, preset, a4_hz }) => {
+        Ok(Command::Analyze {
+            mode,
+            preset,
+            a4_hz,
+        }) => {
             let session_mode = match mode {
                 AnalyzeMode::Chromatic => SessionMode::chromatic(),
                 AnalyzeMode::Preset => SessionMode::preset(preset.unwrap_or(default_preset().id)),
@@ -232,11 +236,7 @@ mod tests {
 
     #[test]
     fn parses_a4_argument_for_analyze() {
-        let args = vec![
-            "analyze".to_string(),
-            "--a4".to_string(),
-            "432".to_string(),
-        ];
+        let args = vec!["analyze".to_string(), "--a4".to_string(), "432".to_string()];
 
         let command = parse_cli(&args).unwrap();
         match command {

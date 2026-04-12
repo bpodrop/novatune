@@ -1,8 +1,8 @@
 use crate::app::SessionMode;
 use std::collections::VecDeque;
 use tuner_core::{
-    Cents, MeasuredPitch, Note, NoteEstimate, PresetId, TunerMode, TunerOutput, TuningTarget, UiState,
-    default_preset, preset_by_id,
+    Cents, MeasuredPitch, Note, NoteEstimate, PresetId, TunerMode, TunerOutput, TuningTarget,
+    UiState, default_preset, preset_by_id,
 };
 use tuner_dsp_algo::{PitchDetector, PitchDetectorConfig};
 use tuner_dsp_native::TuningSession;
@@ -198,9 +198,11 @@ impl TunerEngine {
                     .strings
                     .iter()
                     .find(|target| target.label == mapped.note_name);
-                let is_within_window = mapped.cents_off.abs() <= self.config.preset_match_window_cents;
+                let is_within_window =
+                    mapped.cents_off.abs() <= self.config.preset_match_window_cents;
 
-                let Some(target_string) = maybe_target_string.copied().filter(|_| is_within_window) else {
+                let Some(target_string) = maybe_target_string.copied().filter(|_| is_within_window)
+                else {
                     self.stable_string_count = 0;
                     self.last_matched_string_index = None;
                     return self.output_for_detection(
@@ -219,7 +221,8 @@ impl TunerEngine {
                     self.stable_string_count = 1;
                 }
 
-                let calibrated_target_hz = target_string.frequency_hz * (self.config.calibration_hz / 440.0);
+                let calibrated_target_hz =
+                    target_string.frequency_hz * (self.config.calibration_hz / 440.0);
                 let target = TuningTarget {
                     note_name: target_string.label.to_string(),
                     frequency_hz: calibrated_target_hz,
