@@ -19,17 +19,20 @@
   min-height: 100dvh;
   margin: 0 auto;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   padding:
-    max(0.5rem, env(safe-area-inset-top, 0px))
+    max(0.35rem, env(safe-area-inset-top, 0px))
     max(0.5rem, env(safe-area-inset-right, 0px))
-    calc(5.75rem + env(safe-area-inset-bottom, 0px))
+    calc(4.75rem + env(safe-area-inset-bottom, 0px))
     max(0.5rem, env(safe-area-inset-left, 0px));
   background: var(--cli-bg);
   color: var(--cli-text);
 }
 
 .top-app-bar {
-  height: 4rem;
+  min-height: 3.4rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -61,7 +64,13 @@
   background: var(--cli-panel);
   border: 1px solid var(--cli-border);
   border-radius: 16px;
-  padding: 0.85rem;
+  padding: 0.8rem;
+}
+
+.tuner-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .stack > * + * {
@@ -145,7 +154,7 @@
 
 .note-display {
   text-align: center;
-  margin: 0.7rem 0;
+  margin: 0.65rem 0;
 }
 
 .note-display-main {
@@ -203,7 +212,7 @@
   display: flex;
   gap: 0.45rem;
   overflow-x: auto;
-  margin-top: 0.8rem;
+  margin-top: 0.65rem;
   padding-bottom: 0.1rem;
 }
 
@@ -334,7 +343,7 @@
 }
 
 .spectral-graph {
-  margin-top: 0.8rem;
+  margin-top: 0.65rem;
   border: 1px solid var(--cli-border);
   border-radius: 12px;
   padding: 0.6rem;
@@ -374,7 +383,8 @@
 }
 
 .primary {
-  margin-top: 0.9rem;
+  margin-top: auto;
+  min-height: 3rem;
   width: 100%;
   border: 0;
   border-radius: 999px;
@@ -399,9 +409,9 @@
   margin: 0 auto;
   width: 100%;
   padding:
-    0.6rem
+    0.45rem
     max(0.5rem, env(safe-area-inset-right, 0px))
-    calc(0.7rem + env(safe-area-inset-bottom, 0px))
+    calc(0.45rem + env(safe-area-inset-bottom, 0px))
     max(0.5rem, env(safe-area-inset-left, 0px));
   background: var(--cli-bg);
   border-top: 1px solid var(--cli-border);
@@ -417,7 +427,7 @@
   border-radius: 999px;
   font-size: 0.66rem;
   letter-spacing: 0.06em;
-  padding: 0.45rem 0.2rem;
+  padding: 0.4rem 0.2rem;
 }
 
 .nav-item.active {

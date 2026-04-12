@@ -478,7 +478,7 @@ function App() {
     <main className="app-shell">
       <TopAppBar onOpenSettings={() => setActiveView('settings')} />
 
-      <section className="panel" hidden={activeView !== 'tuner'}>
+      <section className="panel tuner-panel" hidden={activeView !== 'tuner'}>
         <p className="status-row">
           <span>{running ? 'LISTENING' : 'IDLE'}</span>
           <span>{state.toUpperCase()}</span>
