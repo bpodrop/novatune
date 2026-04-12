@@ -6,6 +6,8 @@ export interface BridgeApi {
   next_output(detectorId: number): RawBridgeOutput | undefined
   set_preset(detectorId: number, presetId: string): boolean
   set_calibration_hz(detectorId: number, calibrationHz: number): boolean
+  set_min_rms(detectorId: number, minRms: number): boolean
+  set_min_clarity(detectorId: number, minClarity: number): boolean
   reset(detectorId: number): boolean
   shutdown(detectorId: number): boolean
 }
@@ -24,6 +26,8 @@ export interface WasmTunerSession {
   ingestSamples(samples: Float32Array): DetectionResult[]
   setPreset(presetId: string): void
   setCalibrationHz(calibrationHz: number): void
+  setMinRms(minRms: number): void
+  setMinClarity(minClarity: number): void
   getState(): TunerState
   reset(): void
   close(): void
@@ -102,6 +106,24 @@ export function createWasmTunerSession(options: SessionOptions): WasmTunerSessio
       const ok = bridge.set_calibration_hz(detectorId, calibrationHz)
       if (!ok) {
         throw new Error(`Failed to set calibration: ${calibrationHz}`)
+      }
+    },
+    setMinRms(minRms: number): void {
+      if (state === 'closed') {
+        return
+      }
+      const ok = bridge.set_min_rms(detectorId, minRms)
+      if (!ok) {
+        throw new Error(`Failed to set min RMS: ${minRms}`)
+      }
+    },
+    setMinClarity(minClarity: number): void {
+      if (state === 'closed') {
+        return
+      }
+      const ok = bridge.set_min_clarity(detectorId, minClarity)
+      if (!ok) {
+        throw new Error(`Failed to set min clarity: ${minClarity}`)
       }
     },
     getState(): TunerState {

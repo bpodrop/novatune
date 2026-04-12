@@ -13,6 +13,8 @@ import {
   push_samples,
   reset,
   set_calibration_hz,
+  set_min_clarity,
+  set_min_rms,
   set_preset,
   shutdown,
 } from '../wasm/pkg/tuner_web_bridge.js'
@@ -25,6 +27,8 @@ function createBridgeStub(output: BridgeApi['next_output'] extends (id: number) 
     next_output: () => output,
     set_preset: () => true,
     set_calibration_hz: () => true,
+    set_min_rms: () => true,
+    set_min_clarity: () => true,
     reset: () => true,
     shutdown: () => true,
   }
@@ -83,6 +87,8 @@ describe('wasm tuner integration flow', () => {
       push_samples,
       set_preset,
       set_calibration_hz,
+      set_min_rms,
+      set_min_clarity,
       reset,
       shutdown,
     }

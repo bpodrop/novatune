@@ -61,6 +61,24 @@ impl PitchDetector {
         &self.config
     }
 
+    pub fn set_min_rms(&mut self, min_rms: f32) -> bool {
+        if !min_rms.is_finite() || min_rms < 0.0 {
+            return false;
+        }
+
+        self.config.min_rms = min_rms;
+        true
+    }
+
+    pub fn set_min_clarity(&mut self, min_clarity: f32) -> bool {
+        if !min_clarity.is_finite() || !(0.0..=1.0).contains(&min_clarity) {
+            return false;
+        }
+
+        self.config.min_clarity = min_clarity;
+        true
+    }
+
     pub fn detect_pitch(&mut self, frame: &[f32]) -> Option<PitchDetectionResult> {
         if frame.len() < self.config.frame_size {
             return None;

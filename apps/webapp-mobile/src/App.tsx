@@ -14,6 +14,9 @@ type PresetId = 'standard_e' | 'drop_d' | 'half_step'
 type PresetString = { label: string; frequencyHz: number }
 type PresetProfile = { id: PresetId; label: string; strings: PresetString[] }
 
+const DEFAULT_MIN_RMS = 0.01
+const DEFAULT_MIN_CLARITY = 0.6
+
 const VIEWS: Array<{ id: ViewId; label: string }> = [
   { id: 'tuner', label: 'Tuner' },
   { id: 'presets', label: 'Presets' },
@@ -291,11 +294,19 @@ function SettingsView({
   setHaptics,
   keepAwake,
   setKeepAwake,
+  minRms,
+  setMinRms,
+  minClarity,
+  setMinClarity,
 }: {
   haptics: boolean
   setHaptics: (value: boolean) => void
   keepAwake: boolean
   setKeepAwake: (value: boolean) => void
+  minRms: number
+  setMinRms: (value: number) => void
+  minClarity: number
+  setMinClarity: (value: number) => void
 }) {
   return (
     <section className="panel stack">
@@ -312,6 +323,38 @@ function SettingsView({
           onChange={(e) => setKeepAwake(e.target.checked)}
         />
       </label>
+      <section className="tuning-control">
+        <div className="tuning-control-header">
+          <span>Min RMS</span>
+          <strong>{minRms.toFixed(3)}</strong>
+        </div>
+        <input
+          className="calibration-slider"
+          type="range"
+          min={0}
+          max={0.03}
+          step={0.001}
+          value={minRms}
+          onChange={(event) => setMinRms(Number(event.target.value))}
+        />
+        <p className="tuning-control-copy">Lower values increase input sensitivity.</p>
+      </section>
+      <section className="tuning-control">
+        <div className="tuning-control-header">
+          <span>Min Clarity</span>
+          <strong>{minClarity.toFixed(2)}</strong>
+        </div>
+        <input
+          className="calibration-slider"
+          type="range"
+          min={0.3}
+          max={0.95}
+          step={0.01}
+          value={minClarity}
+          onChange={(event) => setMinClarity(Number(event.target.value))}
+        />
+        <p className="tuning-control-copy">Lower values accept noisier pitch candidates.</p>
+      </section>
     </section>
   )
 }
@@ -322,6 +365,8 @@ function App() {
   const [calibrationHz, setCalibrationHz] = useState(440)
   const [haptics, setHaptics] = useState(true)
   const [keepAwake, setKeepAwake] = useState(false)
+  const [minRms, setMinRms] = useState(DEFAULT_MIN_RMS)
+  const [minClarity, setMinClarity] = useState(DEFAULT_MIN_CLARITY)
   const [state, setState] = useState<TunerState>('no_signal')
   const [detection, setDetection] = useState<DetectionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -333,6 +378,8 @@ function App() {
   const sessionRef = useRef<ReturnType<typeof createWasmTunerSession> | null>(null)
   const selectedPresetRef = useRef<PresetId>(selectedPreset)
   const calibrationRef = useRef<number>(calibrationHz)
+  const minRmsRef = useRef<number>(minRms)
+  const minClarityRef = useRef<number>(minClarity)
 
   useEffect(() => {
     if (!running) {
@@ -379,6 +426,8 @@ function App() {
         })
         session.setPreset(BRIDGE_PRESET_IDS[selectedPresetRef.current])
         session.setCalibrationHz(calibrationRef.current)
+        session.setMinRms(minRmsRef.current)
+        session.setMinClarity(minClarityRef.current)
         sessionRef.current = session
 
         closeSession = () => session?.close()
@@ -409,6 +458,8 @@ function App() {
   useEffect(() => {
     selectedPresetRef.current = selectedPreset
     calibrationRef.current = calibrationHz
+    minRmsRef.current = minRms
+    minClarityRef.current = minClarity
     const session = sessionRef.current
     if (!session) {
       return
@@ -416,10 +467,12 @@ function App() {
     try {
       session.setPreset(BRIDGE_PRESET_IDS[selectedPreset])
       session.setCalibrationHz(calibrationHz)
+      session.setMinRms(minRms)
+      session.setMinClarity(minClarity)
     } catch (error) {
       console.error('Failed to sync tuning config to wasm session', error)
     }
-  }, [calibrationHz, selectedPreset])
+  }, [calibrationHz, minClarity, minRms, selectedPreset])
 
   return (
     <main className="app-shell">
@@ -476,6 +529,10 @@ function App() {
           setHaptics={setHaptics}
           keepAwake={keepAwake}
           setKeepAwake={setKeepAwake}
+          minRms={minRms}
+          setMinRms={setMinRms}
+          minClarity={minClarity}
+          setMinClarity={setMinClarity}
         />
       ) : null}
 

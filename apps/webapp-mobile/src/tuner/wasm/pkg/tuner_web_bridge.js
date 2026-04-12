@@ -53,6 +53,26 @@ export function set_calibration_hz(detector_id, calibration_hz) {
 
 /**
  * @param {number} detector_id
+ * @param {number} min_clarity
+ * @returns {boolean}
+ */
+export function set_min_clarity(detector_id, min_clarity) {
+    const ret = wasm.set_min_clarity(detector_id, min_clarity);
+    return ret !== 0;
+}
+
+/**
+ * @param {number} detector_id
+ * @param {number} min_rms
+ * @returns {boolean}
+ */
+export function set_min_rms(detector_id, min_rms) {
+    const ret = wasm.set_min_rms(detector_id, min_rms);
+    return ret !== 0;
+}
+
+/**
+ * @param {number} detector_id
  * @param {string} preset_id
  * @returns {boolean}
  */
