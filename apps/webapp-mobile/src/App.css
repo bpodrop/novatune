@@ -16,9 +16,14 @@
 
 .app-shell {
   min-height: 100vh;
-  max-width: 430px;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 0.75rem 0.75rem 6.25rem;
+  width: 100%;
+  padding:
+    max(0.5rem, env(safe-area-inset-top, 0px))
+    max(0.5rem, env(safe-area-inset-right, 0px))
+    calc(5.75rem + env(safe-area-inset-bottom, 0px))
+    max(0.5rem, env(safe-area-inset-left, 0px));
   background: var(--cli-bg);
   color: var(--cli-text);
 }
@@ -28,7 +33,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 0.5rem;
+  padding: 0 0.1rem 0 0.2rem;
 }
 
 .brand {
@@ -56,7 +61,7 @@
   background: var(--cli-panel);
   border: 1px solid var(--cli-border);
   border-radius: 16px;
-  padding: 0.9rem;
+  padding: 0.85rem;
 }
 
 .stack > * + * {
@@ -79,6 +84,8 @@
   margin: 0 0 0.8rem;
   display: flex;
   justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   color: var(--cli-label);
   font-size: 0.7rem;
   letter-spacing: 0.09em;
@@ -143,7 +150,7 @@
 
 .note-display-main {
   margin: 0;
-  font-size: clamp(3.2rem, 18vw, 4.8rem);
+  font-size: clamp(3.6rem, 19vw, 5.2rem);
   line-height: 0.95;
   color: var(--cli-amber);
   font-weight: 700;
@@ -326,7 +333,7 @@
 
 .spectral-bars {
   margin-top: 0.55rem;
-  height: 86px;
+  height: 92px;
   display: grid;
   grid-template-columns: repeat(24, minmax(0, 1fr));
   gap: 2px;
@@ -362,9 +369,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  max-width: 430px;
   margin: 0 auto;
-  padding: 0.6rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  padding:
+    0.6rem
+    max(0.5rem, env(safe-area-inset-right, 0px))
+    calc(0.7rem + env(safe-area-inset-bottom, 0px))
+    max(0.5rem, env(safe-area-inset-left, 0px));
   background: var(--cli-bg);
   border-top: 1px solid var(--cli-border);
   display: grid;
@@ -390,6 +401,19 @@
 
 @media (min-width: 431px) {
   .app-shell {
+    max-width: 430px;
     padding-top: 1rem;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .top-app-bar {
+    padding: 0 0.5rem;
+  }
+
+  .bottom-nav {
+    max-width: 430px;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }
