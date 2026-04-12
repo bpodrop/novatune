@@ -1,0 +1,68 @@
+name: Webapp Mobile WASM CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/webapp-mobile/**'
+      - 'crates/tuner-core/**'
+      - 'crates/tuner-dsp-algo/**'
+      - 'crates/tuner-dsp-web/**'
+      - '.github/workflows/webapp-mobile-wasm-ci.yml'
+  push:
+    paths:
+      - 'apps/webapp-mobile/**'
+      - 'crates/tuner-core/**'
+      - 'crates/tuner-dsp-algo/**'
+      - 'crates/tuner-dsp-web/**'
+      - '.github/workflows/webapp-mobile-wasm-ci.yml'
+
+jobs:
+  wasm-and-webapp:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/webapp-mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/webapp-mobile/package-lock.json
+
+      - name: Setup Rust (wasm target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Setup wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build WASM bridge
+        run: npm run wasm:build
+
+      - name: Verify committed WASM artifacts are up to date
+        run: |
+          git diff --exit-code -- src/tuner/wasm/pkg || (
+            echo "WASM artifacts changed. Run 'npm run wasm:build' and commit src/tuner/wasm/pkg/*" >&2
+            exit 1
+          )
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build webapp
+        run: npm run build
+
+      - name: Validate PWA
+        run: npm run pwa:validate
