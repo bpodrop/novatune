@@ -156,6 +156,24 @@
   letter-spacing: 0.03em;
 }
 
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-close-button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--cli-soft-border-mid);
+  background: var(--cli-panel-alt);
+  color: var(--cli-label);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .panel-copy {
   margin: 0;
   color: var(--cli-label);

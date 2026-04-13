@@ -287,6 +287,7 @@ function PresetsView({
 }
 
 function SettingsView({
+  onClose,
   theme,
   setTheme,
   calibrationHz,
@@ -300,6 +301,7 @@ function SettingsView({
   minClarity,
   setMinClarity,
 }: {
+  onClose: () => void
   theme: ThemeMode
   setTheme: (value: ThemeMode) => void
   calibrationHz: number
@@ -315,7 +317,22 @@ function SettingsView({
 }) {
   return (
     <section className="panel stack">
-      <h2 className="panel-title">Settings</h2>
+      <header className="panel-heading">
+        <h2 className="panel-title">Settings</h2>
+        <button
+          type="button"
+          className="settings-close-button"
+          aria-label="Close settings"
+          onClick={onClose}
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+            <path
+              d="M6.23 6.23a.75.75 0 0 1 1.06 0L12 10.94l4.71-4.71a.75.75 0 1 1 1.06 1.06L13.06 12l4.71 4.71a.75.75 0 0 1-1.06 1.06L12 13.06l-4.71 4.71a.75.75 0 0 1-1.06-1.06L10.94 12 6.23 7.29a.75.75 0 0 1 0-1.06Z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      </header>
       <section className="toggle-row">
         <span>Theme</span>
         <div className="theme-toggle" role="group" aria-label="Theme mode">
@@ -557,7 +574,9 @@ function App() {
 
   return (
     <main className="app-shell" data-theme={theme}>
-      <TopAppBar onOpenSettings={() => setActiveView('settings')} />
+      <TopAppBar
+        onOpenSettings={() => setActiveView((view) => (view === 'settings' ? 'tuner' : 'settings'))}
+      />
 
       <section className="panel tuner-panel" hidden={activeView !== 'tuner'}>
         <p className="status-row">
@@ -603,6 +622,7 @@ function App() {
 
       {activeView === 'settings' ? (
         <SettingsView
+          onClose={() => setActiveView('tuner')}
           theme={theme}
           setTheme={setTheme}
           calibrationHz={calibrationHz}
