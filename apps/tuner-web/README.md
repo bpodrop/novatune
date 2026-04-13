@@ -1,22 +1,28 @@
 # tuner-web
 
-Web tuner client built with React, TypeScript, and Vite.
+Client web baseline (legacy) conservé dans le monorepo.
 
-This app is the baseline web client. A mobile-first variant is available in
-`apps/tuner-web-d-tunner`.
+Le client principal pour la roadmap produit est :
 
-## WASM Build
+- `apps/webapp-mobile`
 
-WASM bridge artifacts in `src/tuner/wasm/pkg` are generated directly from monorepo crate:
-- crate: `crates/tuner-dsp-web`
-- build command: `npm run wasm:build`
-- build script: `scripts/build-wasm-from-workspace.mjs`
+## Statut
 
-This keeps CLI, web, and embedded code paths aligned on the same commit.
+- `tuner-web` reste exécutable et utile pour des tests/comparaisons.
+- les évolutions UX récentes sont faites en priorité sur `webapp-mobile`.
 
-## Tuning Config Contract
+## Commandes
 
-The wasm bridge exposes detector-level tuning controls:
+Depuis `apps/tuner-web` :
 
-- `set_preset(detector_id, preset_id)`
-- `set_calibration_hz(detector_id, calibration_hz)`
+- `npm ci`
+- `npm run dev`
+- `npm run wasm:build`
+- `npm run test`
+- `npm run build`
+
+## Bridge WASM
+
+- crate source : `crates/tuner-dsp-web`
+- artefacts générés : `src/tuner/wasm/pkg`
+- script : `scripts/build-wasm-from-workspace.mjs`

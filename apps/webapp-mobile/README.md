@@ -1,35 +1,58 @@
-# NovaTuner
+# webapp-mobile
 
-NovaTuner web tuner client built with React, TypeScript, and Vite.
+Client web principal NovaTuner (PWA mobile-first) basé sur React + TypeScript + Vite.
 
-Mobile-first Precision Tuner implementation generated from NovaTuner component specs.
+Version courante : `0.1.0`.
 
-## WASM Build
+## Fonctionnalités implémentées
 
-WASM bridge artifacts live in `src/tuner/wasm/pkg` and are generated from:
-- crate: `crates/tuner-dsp-web`
-- build command: `npm run wasm:build`
-- build script: `scripts/build-wasm-from-workspace.mjs`
+- accordeur temps réel avec bridge WASM (`tuner-dsp-web`)
+- mode `preset` et mode `chromatic`
+- sélection de preset in-app via bottom sheet
+- calibration A4 et réglages DSP (`min_rms`, `min_clarity`)
+- thème `dark/light` avec toggle icônes
+- interface mobile-first, navigation basse supprimée
 
-For short-term CI/CD stability (Cloudflare Pages), these generated artifacts are committed.
-When DSP code changes, regenerate and commit `src/tuner/wasm/pkg/*`.
+## Commandes
 
-## Cloudflare Pages (Short Term)
+Depuis `apps/webapp-mobile` :
 
-Use these settings for `apps/webapp-mobile`:
-- Framework preset: `Vite`
-- Root directory: `apps/webapp-mobile`
-- Build command: `npm ci && npm run build`
-- Build output directory: `dist`
-- Node.js version: `20`
+- `npm ci`
+- `npm run dev`
+- `npm run test`
+- `npm run wasm:build`
+- `npm run build`
+- `npm run pwa:validate`
 
-Current build no longer runs `wasm:build` automatically, so Pages does not need Rust/wasm-pack.
+## Bridge WASM
 
-## Tuning Config Contract
+Artefacts commités dans :
 
-The app configures the active wasm detector using:
+- `src/tuner/wasm/pkg`
 
+Source :
+
+- crate Rust : `crates/tuner-dsp-web`
+- script : `scripts/build-wasm-from-workspace.mjs`
+
+Quand le DSP/bridge change, exécuter `npm run wasm:build` et committer `src/tuner/wasm/pkg/*`.
+
+## Contrat de configuration runtime
+
+Le frontend configure le detector via :
+
+- `set_mode(detector_id, "preset" | "chromatic")`
 - `set_preset(detector_id, preset_id)`
 - `set_calibration_hz(detector_id, calibration_hz)`
+- `set_min_rms(detector_id, value)`
+- `set_min_clarity(detector_id, value)`
 
-This keeps displayed note/cents consistent with CLI/native/embedded mapping.
+## Déploiement Cloudflare Pages
+
+Configuration recommandée :
+
+- Framework preset : `Vite`
+- Root directory : `apps/webapp-mobile`
+- Build command : `npm ci && npm run build`
+- Build output directory : `dist`
+- Node.js : `20`

@@ -1,7 +1,7 @@
 # Changelog
 
-## [0.1.0] - 2026-04-03
+## [0.1.0] - 2026-04-13
 
-- Added a React + Vite web tuner with PWA support and WASM bridge integration.
-- Added deterministic WASM generation and pinned-source verification against `tuner-libs`.
-- Added CI quality gates for typecheck, lint, build, tests, and PWA manifest/service-worker validation.
+- Baseline web client kept as legacy app for comparison/testing.
+- Documentation updated to point to `apps/webapp-mobile` as primary product client.
+- WASM bridge integration remains aligned with monorepo crates.

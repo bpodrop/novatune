@@ -1,7 +1,12 @@
 # Changelog
 
-## [0.1.0] - 2026-04-03
+## [0.1.0] - 2026-04-13
 
-- Added a React + Vite web tuner with PWA support and WASM bridge integration.
-- Added deterministic WASM generation and pinned-source verification against `tuner-libs`.
-- Added CI quality gates for typecheck, lint, build, tests, and PWA manifest/service-worker validation.
+- Mobile-first PWA UI finalized with responsive tuner layout.
+- Added dual tuning modes: `preset` and `chromatic` end-to-end (UI + WASM + Rust core mapping).
+- Added live DSP sensitivity controls (`min_rms`, `min_clarity`).
+- Migrated microphone processing from deprecated `ScriptProcessorNode` to `AudioWorkletNode`.
+- Added in-app preset picker and removed bottom navigation menu.
+- Added dark/light theme support with icon toggle.
+- Added app footer with version and GitHub icon link.
+- Added/updated WASM CI workflow and committed WASM bridge artifacts.
