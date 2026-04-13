@@ -9,19 +9,12 @@ import {
 } from './tuner'
 
 type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported'
-type ViewId = 'tuner' | 'presets' | 'settings'
+type ViewId = 'tuner' | 'settings'
 type PresetId = 'standard_e' | 'drop_d' | 'half_step'
 type ThemeMode = 'dark' | 'light'
-type PresetString = { label: string; frequencyHz: number }
-type PresetProfile = { id: PresetId; label: string; strings: PresetString[] }
 
 const DEFAULT_MIN_RMS = 0.01
 const DEFAULT_MIN_CLARITY = 0.6
-
-const VIEWS: Array<{ id: ViewId; label: string }> = [
-  { id: 'tuner', label: 'Tuner' },
-  { id: 'presets', label: 'Presets' },
-]
 
 const PRESETS: Array<{ id: PresetId; label: string }> = [
   { id: 'standard_e', label: 'STANDARD E' },
@@ -35,44 +28,6 @@ const BRIDGE_PRESET_IDS: Record<PresetId, string> = {
   half_step: 'eb-standard',
 }
 
-const PRESET_PROFILES: Record<PresetId, PresetProfile> = {
-  standard_e: {
-    id: 'standard_e',
-    label: 'STANDARD E',
-    strings: [
-      { label: 'E2', frequencyHz: 82.41 },
-      { label: 'A2', frequencyHz: 110.0 },
-      { label: 'D3', frequencyHz: 146.83 },
-      { label: 'G3', frequencyHz: 196.0 },
-      { label: 'B3', frequencyHz: 246.94 },
-      { label: 'E4', frequencyHz: 329.63 },
-    ],
-  },
-  drop_d: {
-    id: 'drop_d',
-    label: 'DROP D',
-    strings: [
-      { label: 'D2', frequencyHz: 73.42 },
-      { label: 'A2', frequencyHz: 110.0 },
-      { label: 'D3', frequencyHz: 146.83 },
-      { label: 'G3', frequencyHz: 196.0 },
-      { label: 'B3', frequencyHz: 246.94 },
-      { label: 'E4', frequencyHz: 329.63 },
-    ],
-  },
-  half_step: {
-    id: 'half_step',
-    label: 'HALF STEP',
-    strings: [
-      { label: 'Eb2', frequencyHz: 77.78 },
-      { label: 'Ab2', frequencyHz: 103.83 },
-      { label: 'Db3', frequencyHz: 138.59 },
-      { label: 'Gb3', frequencyHz: 185.0 },
-      { label: 'Bb3', frequencyHz: 233.08 },
-      { label: 'Eb4', frequencyHz: 311.13 },
-    ],
-  },
-}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
@@ -190,25 +145,64 @@ function SignalInfo({
   )
 }
 
-function TuningPresetStrip({
+function TuningPresetPicker({
   selectedPreset,
   onSelect,
 }: {
   selectedPreset: PresetId
   onSelect: (preset: PresetId) => void
 }) {
+  const [open, setOpen] = useState(false)
+  const activeLabel = PRESETS.find((preset) => preset.id === selectedPreset)?.label ?? 'SELECT PRESET'
+
   return (
-    <section className="preset-strip" aria-label="Tuning presets">
-      {PRESETS.map((preset) => (
-        <button
-          key={preset.id}
-          className={selectedPreset === preset.id ? 'preset-button active' : 'preset-button'}
-          type="button"
-          onClick={() => onSelect(preset.id)}
-        >
-          {preset.label}
-        </button>
-      ))}
+    <section className="preset-picker">
+      <button
+        type="button"
+        className="preset-picker-trigger"
+        aria-label="Choose tuning preset"
+        onClick={() => setOpen(true)}
+      >
+        <span>{activeLabel}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open ? (
+        <div className="preset-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Tuning presets">
+          <section className="preset-sheet">
+            <header className="preset-sheet-header">
+              <h3 className="panel-title">Tuning Presets</h3>
+              <button
+                type="button"
+                className="settings-close-button"
+                aria-label="Close presets"
+                onClick={() => setOpen(false)}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path
+                    d="M6.23 6.23a.75.75 0 0 1 1.06 0L12 10.94l4.71-4.71a.75.75 0 1 1 1.06 1.06L13.06 12l4.71 4.71a.75.75 0 0 1-1.06 1.06L12 13.06l-4.71 4.71a.75.75 0 0 1-1.06-1.06L10.94 12 6.23 7.29a.75.75 0 0 1 0-1.06Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+            </header>
+            <div className="preset-sheet-list">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  className={selectedPreset === preset.id ? 'preset-button active' : 'preset-button'}
+                  type="button"
+                  onClick={() => {
+                    onSelect(preset.id)
+                    setOpen(false)
+                  }}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -245,41 +239,6 @@ function SpectralGraph({
       <div className="spectral-bars" aria-hidden="true">
         {bars.map((height, index) => (
           <span key={index} className="spectral-bar" style={{ height: `${Math.round(height * 100)}%` }} />
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function PresetsView({
-  selectedPreset,
-  onSelect,
-  calibrationHz,
-}: {
-  selectedPreset: PresetId
-  onSelect: (preset: PresetId) => void
-  calibrationHz: number
-}) {
-  const ratio = calibrationHz / 440
-  return (
-    <section className="panel stack">
-      <h2 className="panel-title">Tuning Presets</h2>
-      <p className="panel-copy">Choose a base profile for fast stage switching.</p>
-      <div className="preset-grid">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            className={selectedPreset === preset.id ? 'preset-tile active' : 'preset-tile'}
-            type="button"
-            onClick={() => onSelect(preset.id)}
-          >
-            <span>{preset.label}</span>
-            <small>
-              {PRESET_PROFILES[preset.id].strings.map((item) => `${item.label} ${(
-                item.frequencyHz * ratio
-              ).toFixed(1)}Hz`).join(' • ')}
-            </small>
-          </button>
         ))}
       </div>
     </section>
@@ -588,7 +547,7 @@ function App() {
         <ChromaticGauge centsOff={detection?.centsOff ?? null} />
         <NoteDisplay noteName={detection?.noteName ?? '--'} centsOff={detection?.centsOff ?? null} />
         <SignalInfo frequencyHz={detection?.frequencyHz ?? null} centsOff={detection?.centsOff ?? null} />
-        <TuningPresetStrip selectedPreset={selectedPreset} onSelect={setSelectedPreset} />
+        <TuningPresetPicker selectedPreset={selectedPreset} onSelect={setSelectedPreset} />
 
         <button
           className={running ? 'primary primary-running' : 'primary'}
@@ -612,14 +571,6 @@ function App() {
         {error ? <p className="error">Error: {error}</p> : null}
       </section>
 
-      {activeView === 'presets' ? (
-        <PresetsView
-          selectedPreset={selectedPreset}
-          onSelect={setSelectedPreset}
-          calibrationHz={calibrationHz}
-        />
-      ) : null}
-
       {activeView === 'settings' ? (
         <SettingsView
           onClose={() => setActiveView('tuner')}
@@ -638,18 +589,6 @@ function App() {
         />
       ) : null}
 
-      <nav className="bottom-nav" aria-label="Primary">
-        {VIEWS.map((view) => (
-          <button
-            key={view.id}
-            type="button"
-            className={activeView === view.id ? 'nav-item active' : 'nav-item'}
-            onClick={() => setActiveView(view.id)}
-          >
-            {view.label}
-          </button>
-        ))}
-      </nav>
     </main>
   )
 }
