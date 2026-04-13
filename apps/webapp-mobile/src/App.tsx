@@ -12,6 +12,7 @@ type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported'
 type ViewId = 'tuner' | 'settings'
 type PresetId = 'standard_e' | 'drop_d' | 'half_step'
 type ThemeMode = 'dark' | 'light'
+type TuningMode = 'preset' | 'chromatic'
 
 const DEFAULT_MIN_RMS = 0.01
 const DEFAULT_MIN_CLARITY = 0.6
@@ -113,13 +114,28 @@ function ChromaticGauge({ centsOff }: { centsOff: number | null }) {
   )
 }
 
-function NoteDisplay({ noteName, centsOff }: { noteName: string; centsOff: number | null }) {
+function NoteDisplay({
+  noteName,
+  centsOff,
+  stringName,
+  tuningMode,
+}: {
+  noteName: string
+  centsOff: number | null
+  stringName: string | null
+  tuningMode: TuningMode
+}) {
   return (
     <section className="note-display">
       <p className="note-display-main">{noteName}</p>
       <p className="note-display-offset">
         {centsOff === null ? '-- ct' : `${centsOff >= 0 ? '+' : ''}${centsOff.toFixed(1)} ct`}
       </p>
+      {tuningMode === 'preset' ? (
+        <p className="note-display-string">{stringName ? `String ${stringName}` : 'String --'}</p>
+      ) : (
+        <p className="note-display-string">Chromatic</p>
+      )}
     </section>
   )
 }
@@ -146,14 +162,21 @@ function SignalInfo({
 }
 
 function TuningPresetPicker({
+  tuningMode,
+  onModeChange,
   selectedPreset,
   onSelect,
 }: {
+  tuningMode: TuningMode
+  onModeChange: (mode: TuningMode) => void
   selectedPreset: PresetId
   onSelect: (preset: PresetId) => void
 }) {
   const [open, setOpen] = useState(false)
-  const activeLabel = PRESETS.find((preset) => preset.id === selectedPreset)?.label ?? 'SELECT PRESET'
+  const activeLabel =
+    tuningMode === 'chromatic'
+      ? 'CHROMATIC'
+      : PRESETS.find((preset) => preset.id === selectedPreset)?.label ?? 'SELECT PRESET'
 
   return (
     <section className="preset-picker">
@@ -185,6 +208,22 @@ function TuningPresetPicker({
                 </svg>
               </button>
             </header>
+            <div className="mode-toggle-row" role="group" aria-label="Tuning mode">
+              <button
+                type="button"
+                className={tuningMode === 'preset' ? 'mode-toggle-button active' : 'mode-toggle-button'}
+                onClick={() => onModeChange('preset')}
+              >
+                Preset
+              </button>
+              <button
+                type="button"
+                className={tuningMode === 'chromatic' ? 'mode-toggle-button active' : 'mode-toggle-button'}
+                onClick={() => onModeChange('chromatic')}
+              >
+                Chromatic
+              </button>
+            </div>
             <div className="preset-sheet-list">
               {PRESETS.map((preset) => (
                 <button
@@ -192,6 +231,7 @@ function TuningPresetPicker({
                   className={selectedPreset === preset.id ? 'preset-button active' : 'preset-button'}
                   type="button"
                   onClick={() => {
+                    onModeChange('preset')
                     onSelect(preset.id)
                     setOpen(false)
                   }}
@@ -412,6 +452,7 @@ function App() {
   })
   const [activeView, setActiveView] = useState<ViewId>('tuner')
   const [selectedPreset, setSelectedPreset] = useState<PresetId>('standard_e')
+  const [tuningMode, setTuningMode] = useState<TuningMode>('preset')
   const [calibrationHz, setCalibrationHz] = useState(440)
   const [haptics, setHaptics] = useState(true)
   const [keepAwake, setKeepAwake] = useState(false)
@@ -427,6 +468,7 @@ function App() {
   const hopSize = useMemo(() => 512, [])
   const sessionRef = useRef<ReturnType<typeof createWasmTunerSession> | null>(null)
   const selectedPresetRef = useRef<PresetId>(selectedPreset)
+  const tuningModeRef = useRef<TuningMode>(tuningMode)
   const calibrationRef = useRef<number>(calibrationHz)
   const minRmsRef = useRef<number>(minRms)
   const minClarityRef = useRef<number>(minClarity)
@@ -481,6 +523,7 @@ function App() {
           frameSize,
           hopSize,
         })
+        session.setMode(tuningModeRef.current)
         session.setPreset(BRIDGE_PRESET_IDS[selectedPresetRef.current])
         session.setCalibrationHz(calibrationRef.current)
         session.setMinRms(minRmsRef.current)
@@ -514,6 +557,7 @@ function App() {
 
   useEffect(() => {
     selectedPresetRef.current = selectedPreset
+    tuningModeRef.current = tuningMode
     calibrationRef.current = calibrationHz
     minRmsRef.current = minRms
     minClarityRef.current = minClarity
@@ -522,6 +566,7 @@ function App() {
       return
     }
     try {
+      session.setMode(tuningMode)
       session.setPreset(BRIDGE_PRESET_IDS[selectedPreset])
       session.setCalibrationHz(calibrationHz)
       session.setMinRms(minRms)
@@ -529,7 +574,7 @@ function App() {
     } catch (error) {
       console.error('Failed to sync tuning config to wasm session', error)
     }
-  }, [calibrationHz, minClarity, minRms, selectedPreset])
+  }, [calibrationHz, minClarity, minRms, selectedPreset, tuningMode])
 
   return (
     <main className="app-shell" data-theme={theme}>
@@ -545,9 +590,19 @@ function App() {
         </p>
 
         <ChromaticGauge centsOff={detection?.centsOff ?? null} />
-        <NoteDisplay noteName={detection?.noteName ?? '--'} centsOff={detection?.centsOff ?? null} />
+        <NoteDisplay
+          noteName={detection?.noteName ?? '--'}
+          centsOff={detection?.centsOff ?? null}
+          stringName={detection?.stringName ?? null}
+          tuningMode={tuningMode}
+        />
         <SignalInfo frequencyHz={detection?.frequencyHz ?? null} centsOff={detection?.centsOff ?? null} />
-        <TuningPresetPicker selectedPreset={selectedPreset} onSelect={setSelectedPreset} />
+        <TuningPresetPicker
+          tuningMode={tuningMode}
+          onModeChange={setTuningMode}
+          selectedPreset={selectedPreset}
+          onSelect={setSelectedPreset}
+        />
 
         <button
           className={running ? 'primary primary-running' : 'primary'}

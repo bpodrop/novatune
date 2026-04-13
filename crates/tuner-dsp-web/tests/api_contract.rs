@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use tuner_dsp_web::{
     new_detector, next_output, push_samples, reset, set_calibration_hz, set_min_clarity,
-    set_min_rms, set_preset, shutdown,
+    set_min_rms, set_mode, set_preset, shutdown,
 };
 
 fn sine_wave(frequency_hz: f32, sample_rate: u32, frame_size: usize, amplitude: f32) -> Vec<f32> {
@@ -71,6 +71,7 @@ fn tuning_controls_update_output_mapping() {
 
     assert!(set_preset(detector_id, "drop-d"));
     assert!(set_calibration_hz(detector_id, 432.0));
+    assert!(set_mode(detector_id, "preset"));
 
     let frame = sine_wave(82.41, 44_100, 4096, 0.8);
     let produced = push_samples(detector_id, &frame);
@@ -94,11 +95,13 @@ fn tuning_controls_validate_inputs() {
     assert!(!set_min_rms(detector_id, -0.1));
     assert!(!set_min_clarity(detector_id, -0.1));
     assert!(!set_min_clarity(detector_id, 1.1));
+    assert!(!set_mode(detector_id, "invalid"));
 
     assert!(!set_preset(u32::MAX, "drop-d"));
     assert!(!set_calibration_hz(u32::MAX, 440.0));
     assert!(!set_min_rms(u32::MAX, 0.01));
     assert!(!set_min_clarity(u32::MAX, 0.6));
+    assert!(!set_mode(u32::MAX, "preset"));
 
     assert!(shutdown(detector_id));
 }

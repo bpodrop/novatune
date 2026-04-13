@@ -333,6 +333,14 @@
   line-height: 1.1;
 }
 
+.note-display-string {
+  margin: 0.18rem 0 0;
+  color: var(--cli-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .signal-summary {
   background: var(--cli-panel-alt);
   border: 1px solid var(--cli-soft-border);
@@ -419,6 +427,31 @@
 .preset-sheet-list {
   display: grid;
   gap: 0.45rem;
+}
+
+.mode-toggle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+
+.mode-toggle-button {
+  min-height: 2rem;
+  border: 1px solid var(--cli-soft-border-mid);
+  background: var(--cli-panel-alt);
+  color: var(--cli-label);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mode-toggle-button.active {
+  border-color: var(--cli-accent-active-border);
+  color: var(--cli-on-accent);
+  background: var(--cli-accent-active-bg);
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
 }
 
 .preset-button {

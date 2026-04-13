@@ -13,6 +13,8 @@ pub struct DetectionOutput {
     pub rms: f32,
     pub cents_off: f32,
     pub note_name: String,
+    pub string_name: Option<String>,
+    pub mode: String,
     pub ui_state: String,
 }
 
@@ -36,6 +38,8 @@ impl From<PitchDetectionResult> for DetectionOutput {
             rms: value.rms,
             cents_off,
             note_name,
+            string_name: None,
+            mode: "chromatic".to_string(),
             ui_state: ui_state_label(ui_state).to_string(),
         }
     }
@@ -54,6 +58,8 @@ fn map_detection_for_tuning(
         rms: mapped.rms,
         cents_off: mapped.cents_off,
         note_name: mapped.note_name,
+        string_name: mapped.string_name,
+        mode: mapped.mode.as_str().to_string(),
         ui_state: ui_state_label(mapped.ui_state).to_string(),
     }
 }
@@ -226,6 +232,17 @@ pub fn set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
     handle.tuning_session.set_calibration_hz(calibration_hz)
 }
 
+pub fn set_mode(detector_id: u32, mode: &str) -> bool {
+    let mut lock = registry()
+        .lock()
+        .expect("detector registry lock should not be poisoned");
+    let Some(handle) = lock.detectors.get_mut(&detector_id) else {
+        return false;
+    };
+
+    handle.tuning_session.set_mode(mode)
+}
+
 pub fn set_min_rms(detector_id: u32, min_rms: f32) -> bool {
     let mut lock = registry()
         .lock()
@@ -295,6 +312,11 @@ mod wasm {
     #[wasm_bindgen(js_name = set_calibration_hz)]
     pub fn wasm_set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
         super::set_calibration_hz(detector_id, calibration_hz)
+    }
+
+    #[wasm_bindgen(js_name = set_mode)]
+    pub fn wasm_set_mode(detector_id: u32, mode: String) -> bool {
+        super::set_mode(detector_id, &mode)
     }
 
     #[wasm_bindgen(js_name = set_min_rms)]

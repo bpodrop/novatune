@@ -73,6 +73,18 @@ export function set_min_rms(detector_id, min_rms) {
 
 /**
  * @param {number} detector_id
+ * @param {string} mode
+ * @returns {boolean}
+ */
+export function set_mode(detector_id, mode) {
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.set_mode(detector_id, ptr0, len0);
+    return ret !== 0;
+}
+
+/**
+ * @param {number} detector_id
  * @param {string} preset_id
  * @returns {boolean}
  */

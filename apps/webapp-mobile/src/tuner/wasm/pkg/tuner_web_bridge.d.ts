@@ -15,6 +15,8 @@ export function set_min_clarity(detector_id: number, min_clarity: number): boole
 
 export function set_min_rms(detector_id: number, min_rms: number): boolean;
 
+export function set_mode(detector_id: number, mode: string): boolean;
+
 export function set_preset(detector_id: number, preset_id: string): boolean;
 
 export function shutdown(detector_id: number): boolean;
@@ -30,6 +32,7 @@ export interface InitOutput {
     readonly set_calibration_hz: (a: number, b: number) => number;
     readonly set_min_clarity: (a: number, b: number) => number;
     readonly set_min_rms: (a: number, b: number) => number;
+    readonly set_mode: (a: number, b: number, c: number) => number;
     readonly set_preset: (a: number, b: number, c: number) => number;
     readonly shutdown: (a: number) => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
