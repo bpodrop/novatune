@@ -9,7 +9,7 @@ import {
 } from './tuner'
 
 type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported'
-type ViewId = 'tuner' | 'presets' | 'calibration' | 'settings'
+type ViewId = 'tuner' | 'presets' | 'settings'
 type PresetId = 'standard_e' | 'drop_d' | 'half_step'
 type ThemeMode = 'dark' | 'light'
 type PresetString = { label: string; frequencyHz: number }
@@ -21,7 +21,6 @@ const DEFAULT_MIN_CLARITY = 0.6
 const VIEWS: Array<{ id: ViewId; label: string }> = [
   { id: 'tuner', label: 'Tuner' },
   { id: 'presets', label: 'Presets' },
-  { id: 'calibration', label: 'Calibrate' },
 ]
 
 const PRESETS: Array<{ id: PresetId; label: string }> = [
@@ -287,41 +286,11 @@ function PresetsView({
   )
 }
 
-function CalibrationView({
-  calibrationHz,
-  setCalibrationHz,
-}: {
-  calibrationHz: number
-  setCalibrationHz: (value: number) => void
-}) {
-  return (
-    <section className="panel stack">
-      <h2 className="panel-title">Calibration</h2>
-      <p className="panel-copy">Reference pitch for A4.</p>
-      <div className="calibration-readout">{calibrationHz} Hz</div>
-      <input
-        className="calibration-slider"
-        type="range"
-        min={432}
-        max={448}
-        step={1}
-        value={calibrationHz}
-        onChange={(event) => setCalibrationHz(Number(event.target.value))}
-      />
-      <div className="calibration-steps">
-        {[432, 436, 440, 444, 448].map((value) => (
-          <button key={value} type="button" className="chip" onClick={() => setCalibrationHz(value)}>
-            {value}
-          </button>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 function SettingsView({
   theme,
   setTheme,
+  calibrationHz,
+  setCalibrationHz,
   haptics,
   setHaptics,
   keepAwake,
@@ -333,6 +302,8 @@ function SettingsView({
 }: {
   theme: ThemeMode
   setTheme: (value: ThemeMode) => void
+  calibrationHz: number
+  setCalibrationHz: (value: number) => void
   haptics: boolean
   setHaptics: (value: boolean) => void
   keepAwake: boolean
@@ -389,6 +360,28 @@ function SettingsView({
         <span>Haptic feedback</span>
         <input type="checkbox" checked={haptics} onChange={(e) => setHaptics(e.target.checked)} />
       </label>
+      <section className="tuning-control">
+        <div className="tuning-control-header">
+          <span>Calibration</span>
+          <strong>{calibrationHz} Hz</strong>
+        </div>
+        <input
+          className="calibration-slider"
+          type="range"
+          min={432}
+          max={448}
+          step={1}
+          value={calibrationHz}
+          onChange={(event) => setCalibrationHz(Number(event.target.value))}
+        />
+        <div className="calibration-steps">
+          {[432, 436, 440, 444, 448].map((value) => (
+            <button key={value} type="button" className="chip" onClick={() => setCalibrationHz(value)}>
+              {value}
+            </button>
+          ))}
+        </div>
+      </section>
       <label className="toggle-row">
         <span>Keep screen awake</span>
         <input
@@ -608,14 +601,12 @@ function App() {
         />
       ) : null}
 
-      {activeView === 'calibration' ? (
-        <CalibrationView calibrationHz={calibrationHz} setCalibrationHz={setCalibrationHz} />
-      ) : null}
-
       {activeView === 'settings' ? (
         <SettingsView
           theme={theme}
           setTheme={setTheme}
+          calibrationHz={calibrationHz}
+          setCalibrationHz={setCalibrationHz}
           haptics={haptics}
           setHaptics={setHaptics}
           keepAwake={keepAwake}
