@@ -1,0 +1,22 @@
+:root {
+  font-family: 'Fira Sans', 'Segoe UI', sans-serif;
+  line-height: 1.4;
+  color: #12212b;
+  background: radial-gradient(circle at top, #f0f9ff 0%, #e2e8f0 45%, #f8fafc 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}

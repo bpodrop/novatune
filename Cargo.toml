@@ -1,0 +1,17 @@
+[workspace]
+members = [
+    "crates/tuner-core",
+    "crates/tuner-dsp-algo",
+    "crates/tuner-dsp-native",
+    "crates/tuner-dsp-web",
+    "crates/tuner-dsp-embedded",
+    "apps/tuner-cli",
+    "apps/tuner-embedded",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+version = "0.1.0"
+

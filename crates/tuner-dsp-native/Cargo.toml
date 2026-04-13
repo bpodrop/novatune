@@ -1,0 +1,10 @@
+[package]
+name = "tuner-dsp-native"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tuner-core = { path = "../tuner-core" }
+tuner-dsp-algo = { path = "../tuner-dsp-algo" }
+cpal = "0.15"
