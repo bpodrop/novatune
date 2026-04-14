@@ -24,6 +24,7 @@ type TuningMode = 'preset' | 'chromatic'
 
 const DEFAULT_MIN_RMS = 0.01
 const DEFAULT_MIN_CLARITY = 0.6
+const DEFAULT_PRESET_MATCH_WINDOW_CENTS = 100
 const APP_VERSION = 'V0.1.0'
 const GITHUB_URL = 'https://github.com/bpodrop/novatune'
 function clamp(value: number, min: number, max: number): number {
@@ -354,6 +355,8 @@ function SettingsView({
   setHaptics,
   keepAwake,
   setKeepAwake,
+  presetMatchWindow,
+  setPresetMatchWindow,
   minRms,
   setMinRms,
   minClarity,
@@ -368,6 +371,8 @@ function SettingsView({
   setHaptics: (value: boolean) => void
   keepAwake: boolean
   setKeepAwake: (value: boolean) => void
+  presetMatchWindow: number
+  setPresetMatchWindow: (value: number) => void
   minRms: number
   setMinRms: (value: number) => void
   minClarity: number
@@ -467,6 +472,24 @@ function SettingsView({
       </label>
       <section className="tuning-control">
         <div className="tuning-control-header">
+          <span>Preset Match Window</span>
+          <strong>{presetMatchWindow} ct</strong>
+        </div>
+        <input
+          className="calibration-slider"
+          type="range"
+          min={60}
+          max={150}
+          step={5}
+          value={presetMatchWindow}
+          onChange={(event) => setPresetMatchWindow(Number(event.target.value))}
+        />
+        <p className="tuning-control-copy">
+          Smaller values are stricter; larger values match strings more easily.
+        </p>
+      </section>
+      <section className="tuning-control">
+        <div className="tuning-control-header">
           <span>Min RMS</span>
           <strong>{minRms.toFixed(3)}</strong>
         </div>
@@ -513,10 +536,11 @@ function App() {
   const [presets, setPresets] = useState<TuningPresetProfile[]>([])
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
   const [presetFamilyFilter, setPresetFamilyFilter] = useState<PresetFamilyFilter>('all')
-  const [tuningMode, setTuningMode] = useState<TuningMode>('preset')
+  const [tuningMode, setTuningMode] = useState<TuningMode>('chromatic')
   const [calibrationHz, setCalibrationHz] = useState(440)
   const [haptics, setHaptics] = useState(true)
   const [keepAwake, setKeepAwake] = useState(false)
+  const [presetMatchWindow, setPresetMatchWindow] = useState(DEFAULT_PRESET_MATCH_WINDOW_CENTS)
   const [minRms, setMinRms] = useState(DEFAULT_MIN_RMS)
   const [minClarity, setMinClarity] = useState(DEFAULT_MIN_CLARITY)
   const [state, setState] = useState<TunerState>('no_signal')
@@ -533,6 +557,7 @@ function App() {
   const presetsRef = useRef<TuningPresetProfile[]>(presets)
   const tuningModeRef = useRef<TuningMode>(tuningMode)
   const calibrationRef = useRef<number>(calibrationHz)
+  const presetMatchWindowRef = useRef<number>(presetMatchWindow)
   const minRmsRef = useRef<number>(minRms)
   const minClarityRef = useRef<number>(minClarity)
   const selectedPresetMeta = useMemo(
@@ -657,6 +682,7 @@ function App() {
         setSelectedPreset(presetId)
         session.setMode(tuningModeRef.current)
         session.setPreset(presetId)
+        session.setPresetMatchWindowCents(presetMatchWindowRef.current)
         session.setCalibrationHz(calibrationRef.current)
         session.setMinRms(minRmsRef.current)
         session.setMinClarity(minClarityRef.current)
@@ -691,6 +717,7 @@ function App() {
     selectedPresetRef.current = selectedPreset
     tuningModeRef.current = tuningMode
     calibrationRef.current = calibrationHz
+    presetMatchWindowRef.current = presetMatchWindow
     minRmsRef.current = minRms
     minClarityRef.current = minClarity
     const session = sessionRef.current
@@ -703,13 +730,14 @@ function App() {
     try {
       session.setMode(tuningMode)
       session.setPreset(selectedPreset)
+      session.setPresetMatchWindowCents(presetMatchWindow)
       session.setCalibrationHz(calibrationHz)
       session.setMinRms(minRms)
       session.setMinClarity(minClarity)
     } catch (error) {
       console.error('Failed to sync tuning config to wasm session', error)
     }
-  }, [calibrationHz, minClarity, minRms, selectedPreset, tuningMode])
+  }, [calibrationHz, minClarity, minRms, presetMatchWindow, selectedPreset, tuningMode])
 
   return (
     <main className="app-shell" data-theme={theme}>
@@ -785,6 +813,8 @@ function App() {
           setHaptics={setHaptics}
           keepAwake={keepAwake}
           setKeepAwake={setKeepAwake}
+          presetMatchWindow={presetMatchWindow}
+          setPresetMatchWindow={setPresetMatchWindow}
           minRms={minRms}
           setMinRms={setMinRms}
           minClarity={minClarity}

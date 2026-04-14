@@ -270,6 +270,19 @@ pub fn set_mode(detector_id: u32, mode: &str) -> bool {
     handle.tuning_session.set_mode(mode)
 }
 
+pub fn set_preset_match_window_cents(detector_id: u32, window_cents: f32) -> bool {
+    let mut lock = registry()
+        .lock()
+        .expect("detector registry lock should not be poisoned");
+    let Some(handle) = lock.detectors.get_mut(&detector_id) else {
+        return false;
+    };
+
+    handle
+        .tuning_session
+        .set_preset_match_window_cents(window_cents)
+}
+
 pub fn set_min_rms(detector_id: u32, min_rms: f32) -> bool {
     let mut lock = registry()
         .lock()
@@ -365,6 +378,11 @@ mod wasm {
     #[wasm_bindgen(js_name = set_mode)]
     pub fn wasm_set_mode(detector_id: u32, mode: String) -> bool {
         super::set_mode(detector_id, &mode)
+    }
+
+    #[wasm_bindgen(js_name = set_preset_match_window_cents)]
+    pub fn wasm_set_preset_match_window_cents(detector_id: u32, window_cents: f32) -> bool {
+        super::set_preset_match_window_cents(detector_id, window_cents)
     }
 
     #[wasm_bindgen(js_name = set_min_rms)]

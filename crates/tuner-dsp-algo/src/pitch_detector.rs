@@ -2,9 +2,17 @@ use tuner_core::PitchDetectionResult;
 
 use crate::interpolate::parabolic_interpolate;
 use crate::nsdf::compute_nsdf;
-use crate::peak_detection::{filter_peak_candidates, find_local_maxima, select_best_peak};
+use crate::peak_detection::{
+    PeakCandidate, filter_peak_candidates, find_local_maxima, select_best_peak,
+};
 use crate::preprocess::preprocess_frame;
 use crate::smoothing::DetectionSmoother;
+
+const OCTAVE_AMBIGUITY_FREQ_MIN_HZ: f32 = 120.0;
+const OCTAVE_AMBIGUITY_FREQ_MAX_HZ: f32 = 260.0;
+const OCTAVE_AMBIGUITY_MAX_PEAK_CLARITY: f32 = 0.90;
+const OCTAVE_AMBIGUITY_CLARITY_DELTA: f32 = 0.05;
+const OCTAVE_AMBIGUITY_TAU_TOLERANCE_RATIO: f32 = 0.04;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PitchDetectorConfig {
@@ -99,6 +107,13 @@ impl PitchDetector {
         let filtered_peaks =
             filter_peak_candidates(&peaks, self.config.min_clarity, tau_min, tau_max);
         let peak = select_best_peak(&filtered_peaks)?;
+        let peak = resolve_octave_ambiguity(
+            peak,
+            &filtered_peaks,
+            self.config.sample_rate,
+            tau_max,
+            self.config.min_frequency_hz,
+        );
         let peak_index = peak.tau.checked_sub(tau_min)?;
 
         let interpolation = parabolic_interpolate(&nsdf, peak_index, tau_min)?;
@@ -124,9 +139,60 @@ impl PitchDetector {
     }
 }
 
+fn resolve_octave_ambiguity(
+    selected_peak: PeakCandidate,
+    peaks: &[PeakCandidate],
+    sample_rate: u32,
+    tau_max: usize,
+    min_frequency_hz: f32,
+) -> PeakCandidate {
+    if selected_peak.clarity >= OCTAVE_AMBIGUITY_MAX_PEAK_CLARITY {
+        return selected_peak;
+    }
+
+    let selected_frequency_hz = sample_rate as f32 / selected_peak.tau as f32;
+    if !(OCTAVE_AMBIGUITY_FREQ_MIN_HZ..=OCTAVE_AMBIGUITY_FREQ_MAX_HZ)
+        .contains(&selected_frequency_hz)
+    {
+        return selected_peak;
+    }
+
+    let Some(target_tau) = selected_peak.tau.checked_mul(2) else {
+        return selected_peak;
+    };
+    if target_tau > tau_max {
+        return selected_peak;
+    }
+
+    let tau_tolerance = (target_tau as f32 * OCTAVE_AMBIGUITY_TAU_TOLERANCE_RATIO).max(1.0);
+    let Some(subharmonic_peak) = peaks
+        .iter()
+        .copied()
+        .filter(|peak| peak.tau > selected_peak.tau)
+        .filter(|peak| (peak.tau as f32 - target_tau as f32).abs() <= tau_tolerance)
+        .max_by(|left, right| left.clarity.total_cmp(&right.clarity))
+    else {
+        return selected_peak;
+    };
+
+    let subharmonic_frequency_hz = sample_rate as f32 / subharmonic_peak.tau as f32;
+    if subharmonic_frequency_hz < min_frequency_hz {
+        return selected_peak;
+    }
+
+    if subharmonic_peak.clarity + OCTAVE_AMBIGUITY_CLARITY_DELTA >= selected_peak.clarity {
+        return subharmonic_peak;
+    }
+
+    selected_peak
+}
+
 #[cfg(test)]
 mod tests {
     use super::{PitchDetector, PitchDetectorConfig};
+    use crate::nsdf::compute_nsdf;
+    use crate::peak_detection::{filter_peak_candidates, find_local_maxima};
+    use crate::preprocess::preprocess_frame;
     use std::f32::consts::PI;
 
     fn sine_wave(
@@ -164,6 +230,33 @@ mod tests {
                 };
                 let pseudo_noise =
                     0.015 * (2.0 * PI * 733.0 * t).sin() + 0.01 * (2.0 * PI * 1_177.0 * t).sin();
+
+                fundamental + second_harmonic + third_harmonic + pick_transient + pseudo_noise
+            })
+            .collect()
+    }
+
+    fn octave_ambiguous_wave(
+        frequency_hz: f32,
+        sample_rate: u32,
+        frame_size: usize,
+        fundamental_amplitude: f32,
+    ) -> Vec<f32> {
+        (0..frame_size)
+            .map(|index| {
+                let t = index as f32 / sample_rate as f32;
+                let envelope = (1.0 - index as f32 / frame_size as f32).max(0.25);
+                let fundamental =
+                    envelope * fundamental_amplitude * (2.0 * PI * frequency_hz * t).sin();
+                let second_harmonic = envelope * 0.95 * (2.0 * PI * frequency_hz * 2.0 * t).sin();
+                let third_harmonic = envelope * 0.35 * (2.0 * PI * frequency_hz * 3.0 * t).sin();
+                let pick_transient = if index < 48 {
+                    0.12 * (2.0 * PI * 1_450.0 * t).sin()
+                } else {
+                    0.0
+                };
+                let pseudo_noise =
+                    0.012 * (2.0 * PI * 811.0 * t).sin() + 0.008 * (2.0 * PI * 1_307.0 * t).sin();
 
                 fundamental + second_harmonic + third_harmonic + pick_transient + pseudo_noise
             })
@@ -252,5 +345,80 @@ mod tests {
         let frame = noisy_frame(config.frame_size, 0.12);
 
         assert!(PitchDetector::new(config).detect_pitch(&frame).is_none());
+    }
+
+    #[test]
+    fn keeps_low_e_fundamental_on_octave_ambiguous_signal() {
+        let configs = [
+            PitchDetectorConfig::default(),
+            PitchDetectorConfig {
+                sample_rate: 48_000,
+                frame_size: 2_048,
+                hop_size: 512,
+                ..PitchDetectorConfig::default()
+            },
+        ];
+        let amplitudes = [0.30, 0.22, 0.16, 0.10, 0.06];
+
+        for config in configs {
+            for amplitude in amplitudes {
+                let frame =
+                    octave_ambiguous_wave(82.41, config.sample_rate, config.frame_size, amplitude);
+                let result = PitchDetector::new(config).detect_pitch(&frame).unwrap();
+                let deviation = (result.frequency_hz - 82.41).abs();
+                let mut summary = String::new();
+                if deviation > 2.0 {
+                    let (tau_min, tau_max) = config.tau_range();
+                    let (processed, _) = preprocess_frame(&frame, config.apply_hann_window);
+                    let nsdf = compute_nsdf(&processed, tau_min, tau_max);
+                    let peaks = find_local_maxima(&nsdf, tau_min);
+                    let filtered =
+                        filter_peak_candidates(&peaks, config.min_clarity, tau_min, tau_max);
+                    let mut ranked = filtered.clone();
+                    ranked.sort_by(|left, right| right.clarity.total_cmp(&left.clarity));
+                    summary = format!(
+                        " peaks={:?}",
+                        ranked.into_iter().take(4).collect::<Vec<_>>()
+                    );
+                }
+                assert!(
+                    deviation <= 2.0,
+                    "sr={}, frame={}, amp={}, detected={}{}",
+                    config.sample_rate,
+                    config.frame_size,
+                    amplitude,
+                    result.frequency_hz,
+                    summary
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn keeps_g3_without_octave_drop_on_short_web_frame() {
+        let config = PitchDetectorConfig {
+            sample_rate: 48_000,
+            frame_size: 2_048,
+            hop_size: 512,
+            ..PitchDetectorConfig::default()
+        };
+        let frame = guitar_like_wave(196.00, config.sample_rate, config.frame_size, 0.32);
+        let result = PitchDetector::new(config).detect_pitch(&frame).unwrap();
+
+        approx_eq(result.frequency_hz, 196.0, 2.0);
+    }
+
+    #[test]
+    fn keeps_high_e_without_octave_drop_on_short_web_frame() {
+        let config = PitchDetectorConfig {
+            sample_rate: 48_000,
+            frame_size: 2_048,
+            hop_size: 512,
+            ..PitchDetectorConfig::default()
+        };
+        let frame = sine_wave(329.63, config.sample_rate, config.frame_size, 0.75);
+        let result = PitchDetector::new(config).detect_pitch(&frame).unwrap();
+
+        approx_eq(result.frequency_hz, 329.63, 1.5);
     }
 }

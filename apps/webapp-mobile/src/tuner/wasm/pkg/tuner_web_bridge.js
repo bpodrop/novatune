@@ -105,6 +105,16 @@ export function set_preset(detector_id, preset_id) {
 
 /**
  * @param {number} detector_id
+ * @param {number} window_cents
+ * @returns {boolean}
+ */
+export function set_preset_match_window_cents(detector_id, window_cents) {
+    const ret = wasm.set_preset_match_window_cents(detector_id, window_cents);
+    return ret !== 0;
+}
+
+/**
+ * @param {number} detector_id
  * @returns {boolean}
  */
 export function shutdown(detector_id) {

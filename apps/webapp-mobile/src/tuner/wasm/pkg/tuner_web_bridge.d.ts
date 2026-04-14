@@ -21,6 +21,8 @@ export function set_mode(detector_id: number, mode: string): boolean;
 
 export function set_preset(detector_id: number, preset_id: string): boolean;
 
+export function set_preset_match_window_cents(detector_id: number, window_cents: number): boolean;
+
 export function shutdown(detector_id: number): boolean;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -37,6 +39,7 @@ export interface InitOutput {
     readonly set_min_rms: (a: number, b: number) => number;
     readonly set_mode: (a: number, b: number, c: number) => number;
     readonly set_preset: (a: number, b: number, c: number) => number;
+    readonly set_preset_match_window_cents: (a: number, b: number) => number;
     readonly shutdown: (a: number) => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

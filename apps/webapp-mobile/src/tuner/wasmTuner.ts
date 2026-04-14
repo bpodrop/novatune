@@ -7,6 +7,7 @@ export interface BridgeApi {
   list_presets(): RawBridgePreset[]
   set_preset(detectorId: number, presetId: string): boolean
   set_mode(detectorId: number, mode: 'preset' | 'chromatic'): boolean
+  set_preset_match_window_cents(detectorId: number, windowCents: number): boolean
   set_calibration_hz(detectorId: number, calibrationHz: number): boolean
   set_min_rms(detectorId: number, minRms: number): boolean
   set_min_clarity(detectorId: number, minClarity: number): boolean
@@ -47,6 +48,7 @@ export interface WasmTunerSession {
   ingestSamples(samples: Float32Array): DetectionResult[]
   setMode(mode: 'preset' | 'chromatic'): void
   setPreset(presetId: string): void
+  setPresetMatchWindowCents(windowCents: number): void
   setCalibrationHz(calibrationHz: number): void
   setMinRms(minRms: number): void
   setMinClarity(minClarity: number): void
@@ -75,7 +77,7 @@ function mapOutput(raw: RawBridgeOutput | undefined): DetectionResult | null {
     stringIndex: raw.string_index ?? null,
     stringCount: raw.string_count ?? null,
     stringName: raw.string_name ?? null,
-    mode: raw.mode ?? 'preset',
+    mode: raw.mode ?? 'chromatic',
     uiState: raw.ui_state,
   }
 }
@@ -152,6 +154,15 @@ export function createWasmTunerSession(options: SessionOptions): WasmTunerSessio
       const ok = bridge.set_mode(detectorId, mode)
       if (!ok) {
         throw new Error(`Failed to set mode: ${mode}`)
+      }
+    },
+    setPresetMatchWindowCents(windowCents: number): void {
+      if (state === 'closed') {
+        return
+      }
+      const ok = bridge.set_preset_match_window_cents(detectorId, windowCents)
+      if (!ok) {
+        throw new Error(`Failed to set preset match window: ${windowCents}`)
       }
     },
     setCalibrationHz(calibrationHz: number): void {

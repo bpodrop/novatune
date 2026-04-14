@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use tuner_dsp_web::{
     list_presets, new_detector, next_output, push_samples, reset, set_calibration_hz,
-    set_min_clarity, set_min_rms, set_mode, set_preset, shutdown,
+    set_min_clarity, set_min_rms, set_mode, set_preset, set_preset_match_window_cents, shutdown,
 };
 
 fn sine_wave(frequency_hz: f32, sample_rate: u32, frame_size: usize, amplitude: f32) -> Vec<f32> {
@@ -129,12 +129,14 @@ fn tuning_controls_validate_inputs() {
     assert!(!set_min_rms(detector_id, -0.1));
     assert!(!set_min_clarity(detector_id, -0.1));
     assert!(!set_min_clarity(detector_id, 1.1));
+    assert!(!set_preset_match_window_cents(detector_id, 0.0));
     assert!(!set_mode(detector_id, "invalid"));
 
     assert!(!set_preset(u32::MAX, "drop-d"));
     assert!(!set_calibration_hz(u32::MAX, 440.0));
     assert!(!set_min_rms(u32::MAX, 0.01));
     assert!(!set_min_clarity(u32::MAX, 0.6));
+    assert!(!set_preset_match_window_cents(u32::MAX, 100.0));
     assert!(!set_mode(u32::MAX, "preset"));
 
     assert!(shutdown(detector_id));
@@ -159,4 +161,26 @@ fn exposes_builtin_presets_with_string_metadata() {
         .expect("missing drop-b-9 preset");
     assert_eq!(drop_b_9.string_count, 9);
     assert_eq!(drop_b_9.strings.len(), 9);
+}
+
+#[test]
+fn preset_match_window_adjusts_mapping_behavior() {
+    let detector_id = new_detector(44_100, 4096, 1024);
+    assert_ne!(detector_id, 0);
+    assert!(set_mode(detector_id, "preset"));
+    assert!(set_preset(detector_id, "drop-d"));
+
+    assert!(set_preset_match_window_cents(detector_id, 60.0));
+    assert!(reset(detector_id));
+    assert!(push_samples(detector_id, &sine_wave(78.69, 44_100, 4096, 0.8)) > 0);
+    let strict = next_output(detector_id).expect("expected strict output");
+    assert!(strict.string_name.is_none());
+
+    assert!(set_preset_match_window_cents(detector_id, 150.0));
+    assert!(reset(detector_id));
+    assert!(push_samples(detector_id, &sine_wave(78.69, 44_100, 4096, 0.8)) > 0);
+    let relaxed = next_output(detector_id).expect("expected relaxed output");
+    assert!(relaxed.string_name.is_some());
+
+    assert!(shutdown(detector_id));
 }

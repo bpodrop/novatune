@@ -103,6 +103,18 @@ impl TuningSession {
         true
     }
 
+    pub fn preset_match_window_cents(&self) -> f32 {
+        self.preset_match_window_cents
+    }
+
+    pub fn set_preset_match_window_cents(&mut self, window_cents: f32) -> bool {
+        if !window_cents.is_finite() || window_cents <= 0.0 {
+            return false;
+        }
+        self.preset_match_window_cents = window_cents;
+        true
+    }
+
     pub fn map_detection(&self, detection: PitchDetectionResult) -> MappedDetection {
         let normalized_frequency_hz = detection.frequency_hz * (440.0 / self.calibration_hz);
         let (cents_off, note_name, tuning_profile_id, string_index, string_count, string_name) =
@@ -216,11 +228,14 @@ mod tests {
         assert_eq!(session.preset_id().as_str(), "drop-d");
         assert!(session.set_calibration_hz(432.0));
         assert_eq!(session.calibration_hz(), 432.0);
+        assert!(session.set_preset_match_window_cents(80.0));
+        assert_eq!(session.preset_match_window_cents(), 80.0);
         assert!(session.set_mode("chromatic"));
         assert_eq!(session.mode(), TuningMode::Chromatic);
 
         assert!(!session.set_preset("invalid"));
         assert!(!session.set_calibration_hz(0.0));
+        assert!(!session.set_preset_match_window_cents(0.0));
         assert!(!session.set_mode("invalid"));
     }
 

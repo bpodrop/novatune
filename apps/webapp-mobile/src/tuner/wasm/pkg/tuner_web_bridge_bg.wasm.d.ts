@@ -11,6 +11,7 @@ export const set_min_clarity: (a: number, b: number) => number;
 export const set_min_rms: (a: number, b: number) => number;
 export const set_mode: (a: number, b: number, c: number) => number;
 export const set_preset: (a: number, b: number, c: number) => number;
+export const set_preset_match_window_cents: (a: number, b: number) => number;
 export const shutdown: (a: number) => number;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
