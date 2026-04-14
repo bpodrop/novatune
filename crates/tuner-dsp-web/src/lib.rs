@@ -2,7 +2,9 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Mutex, OnceLock};
 
 use serde::{Deserialize, Serialize};
-use tuner_core::{Note, PitchDetectionResult, TuningSession, UiState, resolve_ui_state};
+use tuner_core::{
+    Note, PitchDetectionResult, TuningSession, UiState, all_presets, resolve_ui_state,
+};
 use tuner_dsp_algo::{PitchDetector, PitchDetectorConfig};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -19,6 +21,22 @@ pub struct DetectionOutput {
     pub string_name: Option<String>,
     pub mode: String,
     pub ui_state: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PresetStringOutput {
+    pub index: u8,
+    pub display_number: u8,
+    pub label: String,
+    pub frequency_hz: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PresetOutput {
+    pub id: String,
+    pub label: String,
+    pub string_count: u8,
+    pub strings: Vec<PresetStringOutput>,
 }
 
 impl From<PitchDetectionResult> for DetectionOutput {
@@ -281,6 +299,27 @@ pub fn shutdown(detector_id: u32) -> bool {
     lock.detectors.remove(&detector_id).is_some()
 }
 
+pub fn list_presets() -> Vec<PresetOutput> {
+    all_presets()
+        .iter()
+        .map(|preset| PresetOutput {
+            id: preset.id.as_str().to_string(),
+            label: preset.display_name.to_string(),
+            string_count: preset.string_count() as u8,
+            strings: preset
+                .strings
+                .iter()
+                .map(|target| PresetStringOutput {
+                    index: target.index,
+                    display_number: target.display_number,
+                    label: target.label.to_string(),
+                    frequency_hz: target.frequency_hz,
+                })
+                .collect(),
+        })
+        .collect()
+}
+
 #[cfg(target_arch = "wasm32")]
 mod wasm {
     use serde_wasm_bindgen::to_value;
@@ -336,5 +375,10 @@ mod wasm {
     #[wasm_bindgen(js_name = set_min_clarity)]
     pub fn wasm_set_min_clarity(detector_id: u32, min_clarity: f32) -> bool {
         super::set_min_clarity(detector_id, min_clarity)
+    }
+
+    #[wasm_bindgen(js_name = list_presets)]
+    pub fn wasm_list_presets() -> JsValue {
+        to_value(&super::list_presets()).expect("preset list serialization should not fail")
     }
 }

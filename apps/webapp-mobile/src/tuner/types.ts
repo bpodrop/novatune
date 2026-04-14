@@ -26,6 +26,22 @@ export interface DetectionResult {
   uiState: Extract<TunerState, 'no_signal' | 'searching' | 'unstable' | 'too_low' | 'in_tune' | 'too_high'>
 }
 
+export interface TuningPresetString {
+  index: number
+  displayNumber: number
+  label: string
+  frequencyHz: number
+}
+
+export interface TuningPresetProfile {
+  id: string
+  label: string
+  stringCount: number
+  strings: TuningPresetString[]
+}
+
+export type PresetFamilyFilter = 'all' | 6 | 7 | 8 | 9
+
 export interface TunerConfig {
   sampleRate: number
   frameSize: number

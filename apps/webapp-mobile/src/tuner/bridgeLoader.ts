@@ -1,4 +1,5 @@
 import init, {
+  list_presets,
   new_detector,
   next_output,
   push_samples,
@@ -22,6 +23,7 @@ export async function loadBridge(): Promise<BridgeApi> {
   }
 
   return {
+    list_presets,
     new_detector,
     next_output,
     push_samples,

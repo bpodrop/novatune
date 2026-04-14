@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const list_presets: () => any;
 export const new_detector: (a: number, b: number, c: number) => number;
 export const next_output: (a: number) => any;
 export const push_samples: (a: number, b: number, c: number) => number;

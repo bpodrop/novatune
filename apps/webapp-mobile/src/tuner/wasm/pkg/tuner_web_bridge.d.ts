@@ -1,6 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export function list_presets(): any;
+
 export function new_detector(sample_rate: number, frame_size: number, hop_size: number): number;
 
 export function next_output(detector_id: number): any | undefined;
@@ -25,6 +27,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly list_presets: () => any;
     readonly new_detector: (a: number, b: number, c: number) => number;
     readonly next_output: (a: number) => any;
     readonly push_samples: (a: number, b: number, c: number) => number;

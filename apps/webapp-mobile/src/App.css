@@ -191,6 +191,44 @@
   letter-spacing: 0.09em;
 }
 
+.mode-badge-row {
+  margin: 0 0 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border: 1px solid var(--cli-soft-border-mid);
+  background: var(--cli-panel-alt);
+}
+
+.mode-badge.preset {
+  color: var(--cli-on-accent);
+  background: var(--cli-accent-active-bg);
+  border-color: var(--cli-accent-active-border);
+}
+
+.mode-badge.chromatic {
+  color: var(--cli-label);
+}
+
+.mode-badge-sub {
+  color: var(--cli-label);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .chromatic-gauge {
   border: 1px solid var(--cli-border);
   border-radius: 12px;
@@ -460,6 +498,32 @@
   gap: 0.45rem;
 }
 
+.preset-family-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.6rem;
+}
+
+.family-filter-button {
+  min-height: 1.8rem;
+  border: 1px solid var(--cli-soft-border-mid);
+  background: var(--cli-panel-alt);
+  color: var(--cli-label);
+  border-radius: 999px;
+  padding: 0.2rem 0.58rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.family-filter-button.active {
+  border-color: var(--cli-accent-active-border);
+  color: var(--cli-on-accent);
+  background: var(--cli-accent-active-bg);
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
+}
+
 .mode-toggle-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -507,6 +571,12 @@
   background: var(--cli-cyan);
   color: var(--cli-on-accent);
   border-color: var(--cli-cyan);
+}
+
+.preset-empty-state {
+  margin: 0.2rem 0.1rem 0;
+  color: var(--cli-label);
+  font-size: 0.72rem;
 }
 
 .calibration-readout {
@@ -670,6 +740,10 @@
 .primary-running {
   background: var(--cli-primary-running);
   box-shadow: 0 8px 20px rgba(255, 211, 0, 0.14);
+}
+
+.primary:disabled {
+  opacity: 0.55;
 }
 
 .error {

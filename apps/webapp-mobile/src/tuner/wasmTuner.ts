@@ -1,9 +1,10 @@
-import type { DetectionResult, TunerConfig, TunerState } from './types'
+import type { DetectionResult, TunerConfig, TunerState, TuningPresetProfile } from './types'
 
 export interface BridgeApi {
   new_detector(sampleRate: number, frameSize: number, hopSize: number): number
   push_samples(detectorId: number, samples: Float32Array): number
   next_output(detectorId: number): RawBridgeOutput | undefined
+  list_presets(): RawBridgePreset[]
   set_preset(detectorId: number, presetId: string): boolean
   set_mode(detectorId: number, mode: 'preset' | 'chromatic'): boolean
   set_calibration_hz(detectorId: number, calibrationHz: number): boolean
@@ -26,6 +27,20 @@ interface RawBridgeOutput {
   string_name?: string
   mode?: 'preset' | 'chromatic'
   ui_state: DetectionResult['uiState']
+}
+
+interface RawBridgePresetString {
+  index: number
+  display_number: number
+  label: string
+  frequency_hz: number
+}
+
+interface RawBridgePreset {
+  id: string
+  label: string
+  string_count: number
+  strings: RawBridgePresetString[]
 }
 
 export interface WasmTunerSession {
@@ -63,6 +78,25 @@ function mapOutput(raw: RawBridgeOutput | undefined): DetectionResult | null {
     mode: raw.mode ?? 'preset',
     uiState: raw.ui_state,
   }
+}
+
+function mapPreset(raw: RawBridgePreset): TuningPresetProfile {
+  return {
+    id: raw.id,
+    label: raw.label,
+    stringCount: raw.string_count,
+    strings: raw.strings.map((rawString) => ({
+      index: rawString.index,
+      displayNumber: rawString.display_number,
+      label: rawString.label,
+      frequencyHz: rawString.frequency_hz,
+    })),
+  }
+}
+
+export function listAvailablePresets(bridge: BridgeApi): TuningPresetProfile[] {
+  const presets = bridge.list_presets()
+  return presets.map(mapPreset)
 }
 
 export function createWasmTunerSession(options: SessionOptions): WasmTunerSession {
@@ -173,4 +207,4 @@ export function createWasmTunerSession(options: SessionOptions): WasmTunerSessio
   }
 }
 
-export type { DetectionResult, TunerConfig, TunerState }
+export type { DetectionResult, TunerConfig, TunerState, TuningPresetProfile }

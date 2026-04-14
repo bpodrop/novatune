@@ -8,6 +8,7 @@ import {
 import { createSineWave } from '../../audio/sineWave'
 import {
   initSync,
+  list_presets,
   new_detector,
   next_output,
   push_samples,
@@ -23,6 +24,7 @@ import { readFileSync } from 'node:fs'
 
 function createBridgeStub(output: BridgeApi['next_output'] extends (id: number) => infer R ? R : never): BridgeApi {
   return {
+    list_presets: () => [],
     new_detector: () => 7,
     push_samples: () => (output ? 1 : 0),
     next_output: () => output,
@@ -97,6 +99,7 @@ describe('wasm tuner integration flow', () => {
     const wasmBytes = readFileSync(new URL('../wasm/pkg/tuner_web_bridge_bg.wasm', import.meta.url))
     initSync({ module: wasmBytes })
     const bridge: BridgeApi = {
+      list_presets,
       new_detector,
       next_output,
       push_samples,

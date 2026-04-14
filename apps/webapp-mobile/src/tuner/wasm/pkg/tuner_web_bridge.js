@@ -1,6 +1,14 @@
 /* @ts-self-types="./tuner_web_bridge.d.ts" */
 
 /**
+ * @returns {any}
+ */
+export function list_presets() {
+    const ret = wasm.list_presets();
+    return ret;
+}
+
+/**
  * @param {number} sample_rate
  * @param {number} frame_size
  * @param {number} hop_size
@@ -116,9 +124,16 @@ function __wbg_get_imports() {
         __wbg___wbindgen_throw_6b64449b9b9ed33c: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
+        __wbg_new_682678e2f47e32bc: function() {
+            const ret = new Array();
+            return ret;
+        },
         __wbg_new_aa8d0fa9762c29bd: function() {
             const ret = new Object();
             return ret;
+        },
+        __wbg_set_3bf1de9fab0cd644: function(arg0, arg1, arg2) {
+            arg0[arg1 >>> 0] = arg2;
         },
         __wbg_set_6be42768c690e380: function(arg0, arg1, arg2) {
             arg0[arg1] = arg2;

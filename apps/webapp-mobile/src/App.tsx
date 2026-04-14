@@ -4,9 +4,17 @@ import { startMicrophoneStream } from './audio/microphone'
 import {
   createWasmTunerSession,
   type DetectionResult,
+  listAvailablePresets,
   loadBridge,
+  type PresetFamilyFilter,
+  type TuningPresetProfile,
   type TunerState,
 } from './tuner'
+import {
+  filterPresetsByFamily,
+  resolvePresetIdForFamily,
+  shouldShowPresetStrings,
+} from './tuner/presets'
 
 type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported'
 type ViewId = 'tuner' | 'settings'
@@ -17,124 +25,15 @@ const DEFAULT_MIN_RMS = 0.01
 const DEFAULT_MIN_CLARITY = 0.6
 const APP_VERSION = 'V0.1.0'
 const GITHUB_URL = 'https://github.com/bpodrop/novatune'
-
-const PRESETS = [
-  {
-    id: 'standard_e',
-    label: 'E STANDARD (6)',
-    bridgeId: 'e-standard',
-    strings: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 6,
-  },
-  {
-    id: 'drop_d',
-    label: 'DROP D (6)',
-    bridgeId: 'drop-d',
-    strings: ['D2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 6,
-  },
-  {
-    id: 'half_step',
-    label: 'EB STANDARD (6)',
-    bridgeId: 'eb-standard',
-    strings: ['Eb2', 'Ab2', 'Db3', 'Gb3', 'Bb3', 'Eb4'],
-    stringCount: 6,
-  },
-  {
-    id: 'd_standard',
-    label: 'D STANDARD (6)',
-    bridgeId: 'd-standard',
-    strings: ['D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
-    stringCount: 6,
-  },
-  {
-    id: 'drop_c',
-    label: 'DROP C (6)',
-    bridgeId: 'drop-c',
-    strings: ['C2', 'G2', 'C3', 'F3', 'A3', 'D4'],
-    stringCount: 6,
-  },
-  {
-    id: 'open_g',
-    label: 'OPEN G (6)',
-    bridgeId: 'open-g',
-    strings: ['D2', 'G2', 'D3', 'G3', 'B3', 'D4'],
-    stringCount: 6,
-  },
-  {
-    id: 'open_d',
-    label: 'OPEN D (6)',
-    bridgeId: 'open-d',
-    strings: ['D2', 'A2', 'D3', 'F#3', 'A3', 'D4'],
-    stringCount: 6,
-  },
-  {
-    id: 'dadgad',
-    label: 'DADGAD (6)',
-    bridgeId: 'dadgad',
-    strings: ['D2', 'A2', 'D3', 'G3', 'A3', 'D4'],
-    stringCount: 6,
-  },
-  {
-    id: 'b_standard_7',
-    label: 'B STANDARD (7)',
-    bridgeId: 'b-standard-7',
-    strings: ['B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 7,
-  },
-  {
-    id: 'drop_a_7',
-    label: 'DROP A (7)',
-    bridgeId: 'drop-a-7',
-    strings: ['A1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 7,
-  },
-  {
-    id: 'a_standard_7',
-    label: 'A STANDARD (7)',
-    bridgeId: 'a-standard-7',
-    strings: ['A1', 'D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
-    stringCount: 7,
-  },
-  {
-    id: 'fsharp_standard_8',
-    label: 'F# STANDARD (8)',
-    bridgeId: 'fsharp-standard-8',
-    strings: ['F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 8,
-  },
-  {
-    id: 'e_standard_8',
-    label: 'E STANDARD (8)',
-    bridgeId: 'e-standard-8',
-    strings: ['E1', 'A1', 'D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
-    stringCount: 8,
-  },
-  {
-    id: 'csharp_standard_9',
-    label: 'C# STANDARD (9)',
-    bridgeId: 'csharp-standard-9',
-    strings: ['C#1', 'F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 9,
-  },
-  {
-    id: 'drop_b_9',
-    label: 'DROP B (9)',
-    bridgeId: 'drop-b-9',
-    strings: ['B0', 'F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
-    stringCount: 9,
-  },
-] as const
-
-type PresetId = (typeof PRESETS)[number]['id']
-
-
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
-function presetById(presetId: PresetId) {
-  return PRESETS.find((preset) => preset.id === presetId) ?? PRESETS[0]
+function presetById(presets: readonly TuningPresetProfile[], presetId: string | null) {
+  if (!presetId) {
+    return null
+  }
+  return presets.find((preset) => preset.id === presetId) ?? null
 }
 
 function TopAppBar({ onOpenSettings }: { onOpenSettings: () => void }) {
@@ -285,21 +184,32 @@ function SignalInfo({
 }
 
 function TuningPresetPicker({
+  presets,
+  familyFilter,
+  onFamilyFilterChange,
   tuningMode,
   onModeChange,
   selectedPreset,
   onSelect,
 }: {
+  presets: readonly TuningPresetProfile[]
+  familyFilter: PresetFamilyFilter
+  onFamilyFilterChange: (value: PresetFamilyFilter) => void
   tuningMode: TuningMode
   onModeChange: (mode: TuningMode) => void
-  selectedPreset: PresetId
-  onSelect: (preset: PresetId) => void
+  selectedPreset: string | null
+  onSelect: (preset: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  const filteredPresets = useMemo(
+    () => filterPresetsByFamily(presets, familyFilter),
+    [familyFilter, presets],
+  )
+  const selectedPresetMeta = presetById(presets, selectedPreset)
   const activeLabel =
     tuningMode === 'chromatic'
       ? 'CHROMATIC'
-      : presetById(selectedPreset).label
+      : selectedPresetMeta?.label ?? 'SELECT PRESET'
 
   return (
     <section className="preset-picker">
@@ -347,8 +257,22 @@ function TuningPresetPicker({
                 Chromatic
               </button>
             </div>
+            <div className="preset-family-filter" role="group" aria-label="String family">
+              {(['all', 6, 7, 8, 9] as const).map((value) => (
+                <button
+                  key={String(value)}
+                  type="button"
+                  className={
+                    familyFilter === value ? 'family-filter-button active' : 'family-filter-button'
+                  }
+                  onClick={() => onFamilyFilterChange(value)}
+                >
+                  {value === 'all' ? 'All' : `${value} strings`}
+                </button>
+              ))}
+            </div>
             <div className="preset-sheet-list">
-              {PRESETS.map((preset) => (
+              {filteredPresets.map((preset) => (
                 <button
                   key={preset.id}
                   className={selectedPreset === preset.id ? 'preset-button active' : 'preset-button'}
@@ -359,9 +283,12 @@ function TuningPresetPicker({
                     setOpen(false)
                   }}
                 >
-                  {preset.label}
+                  {`${preset.label} (${preset.stringCount})`}
                 </button>
               ))}
+              {filteredPresets.length === 0 ? (
+                <p className="preset-empty-state">No preset available for this family.</p>
+              ) : null}
             </div>
           </section>
         </div>
@@ -574,7 +501,9 @@ function App() {
     return stored === 'light' ? 'light' : 'dark'
   })
   const [activeView, setActiveView] = useState<ViewId>('tuner')
-  const [selectedPreset, setSelectedPreset] = useState<PresetId>('standard_e')
+  const [presets, setPresets] = useState<TuningPresetProfile[]>([])
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
+  const [presetFamilyFilter, setPresetFamilyFilter] = useState<PresetFamilyFilter>('all')
   const [tuningMode, setTuningMode] = useState<TuningMode>('preset')
   const [calibrationHz, setCalibrationHz] = useState(440)
   const [haptics, setHaptics] = useState(true)
@@ -590,18 +519,25 @@ function App() {
   const frameSize = useMemo(() => 2048, [])
   const hopSize = useMemo(() => 512, [])
   const sessionRef = useRef<ReturnType<typeof createWasmTunerSession> | null>(null)
-  const selectedPresetRef = useRef<PresetId>(selectedPreset)
+  const selectedPresetRef = useRef<string | null>(selectedPreset)
+  const presetFamilyFilterRef = useRef<PresetFamilyFilter>(presetFamilyFilter)
+  const presetsRef = useRef<TuningPresetProfile[]>(presets)
   const tuningModeRef = useRef<TuningMode>(tuningMode)
   const calibrationRef = useRef<number>(calibrationHz)
   const minRmsRef = useRef<number>(minRms)
   const minClarityRef = useRef<number>(minClarity)
-  const selectedPresetMeta = useMemo(() => presetById(selectedPreset), [selectedPreset])
-  const activeStringIndex =
-    tuningMode === 'preset' &&
-    detection?.mode === 'preset' &&
-    (detection.tuningProfileId === null || detection.tuningProfileId === selectedPresetMeta.bridgeId)
-      ? detection?.stringIndex ?? null
-      : null
+  const selectedPresetMeta = useMemo(
+    () => presetById(presets, selectedPreset),
+    [presets, selectedPreset],
+  )
+  let activeStringIndex: number | null = null
+  if (
+    detection &&
+    shouldShowPresetStrings(tuningMode, detection.mode) &&
+    (detection.tuningProfileId === null || detection.tuningProfileId === selectedPresetMeta?.id)
+  ) {
+    activeStringIndex = detection.stringIndex
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -609,6 +545,48 @@ function App() {
     }
     window.localStorage.setItem('novatuner.theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    let active = true
+
+    async function syncPresets() {
+      try {
+        const bridge = await loadBridge()
+        if (!active) {
+          return
+        }
+        const bridgePresets = listAvailablePresets(bridge)
+        if (bridgePresets.length === 0) {
+          setError('No tuning presets returned by WASM bridge')
+          return
+        }
+        setPresets(bridgePresets)
+        setSelectedPreset((current) =>
+          resolvePresetIdForFamily(bridgePresets, current, presetFamilyFilterRef.current),
+        )
+      } catch (syncError) {
+        const message = syncError instanceof Error ? syncError.message : String(syncError)
+        if (active) {
+          setError(message)
+        }
+      }
+    }
+
+    void syncPresets()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    presetsRef.current = presets
+  }, [presets])
+
+  useEffect(() => {
+    presetFamilyFilterRef.current = presetFamilyFilter
+    setSelectedPreset((current) => resolvePresetIdForFamily(presets, current, presetFamilyFilter))
+  }, [presetFamilyFilter, presets])
 
   useEffect(() => {
     if (!running) {
@@ -645,6 +623,7 @@ function App() {
           audio.stop()
           return
         }
+        stopAudio = () => audio.stop()
 
         setPermission('granted')
         session = createWasmTunerSession({
@@ -653,17 +632,31 @@ function App() {
           frameSize,
           hopSize,
         })
+        const bridgePresets = listAvailablePresets(bridge)
+        if (bridgePresets.length > 0) {
+          setPresets(bridgePresets)
+        }
+        const presetId = resolvePresetIdForFamily(
+          bridgePresets.length > 0 ? bridgePresets : presetsRef.current,
+          selectedPresetRef.current,
+          presetFamilyFilterRef.current,
+        )
+        if (!presetId) {
+          throw new Error('No preset available to start tuner session')
+        }
+        selectedPresetRef.current = presetId
+        setSelectedPreset(presetId)
         session.setMode(tuningModeRef.current)
-        session.setPreset(presetById(selectedPresetRef.current).bridgeId)
+        session.setPreset(presetId)
         session.setCalibrationHz(calibrationRef.current)
         session.setMinRms(minRmsRef.current)
         session.setMinClarity(minClarityRef.current)
         sessionRef.current = session
 
         closeSession = () => session?.close()
-        stopAudio = () => audio.stop()
         setState('searching')
       } catch (startError) {
+        stopAudio?.()
         const message = startError instanceof Error ? startError.message : String(startError)
         if (message.toLowerCase().includes('denied') || message.toLowerCase().includes('permission')) {
           setPermission('denied')
@@ -695,16 +688,19 @@ function App() {
     if (!session) {
       return
     }
+    if (!selectedPreset) {
+      return
+    }
     try {
       session.setMode(tuningMode)
-      session.setPreset(selectedPresetMeta.bridgeId)
+      session.setPreset(selectedPreset)
       session.setCalibrationHz(calibrationHz)
       session.setMinRms(minRms)
       session.setMinClarity(minClarity)
     } catch (error) {
       console.error('Failed to sync tuning config to wasm session', error)
     }
-  }, [calibrationHz, minClarity, minRms, selectedPresetMeta.bridgeId, selectedPreset, tuningMode])
+  }, [calibrationHz, minClarity, minRms, selectedPreset, tuningMode])
 
   return (
     <main className="app-shell" data-theme={theme}>
@@ -720,15 +716,26 @@ function App() {
         </p>
 
         <ChromaticGauge centsOff={detection?.centsOff ?? null} />
+        <div className="mode-badge-row">
+          <span className={tuningMode === 'preset' ? 'mode-badge preset' : 'mode-badge chromatic'}>
+            {tuningMode === 'preset' ? 'Preset mode' : 'Chromatic mode'}
+          </span>
+          {tuningMode === 'preset' ? (
+            <span className="mode-badge-sub">{selectedPresetMeta?.label ?? 'No preset'}</span>
+          ) : null}
+        </div>
         <NoteDisplay
           noteName={detection?.noteName ?? '--'}
           centsOff={detection?.centsOff ?? null}
-          strings={selectedPresetMeta.strings}
+          strings={selectedPresetMeta?.strings.map((stringValue) => stringValue.label) ?? []}
           stringIndex={activeStringIndex}
           tuningMode={tuningMode}
         />
         <SignalInfo frequencyHz={detection?.frequencyHz ?? null} centsOff={detection?.centsOff ?? null} />
         <TuningPresetPicker
+          presets={presets}
+          familyFilter={presetFamilyFilter}
+          onFamilyFilterChange={setPresetFamilyFilter}
           tuningMode={tuningMode}
           onModeChange={setTuningMode}
           selectedPreset={selectedPreset}
@@ -738,6 +745,7 @@ function App() {
         <button
           className={running ? 'primary primary-running' : 'primary'}
           type="button"
+          disabled={tuningMode === 'preset' && !selectedPreset}
           onClick={() => {
             setError(null)
             setRunning((value) => !value)

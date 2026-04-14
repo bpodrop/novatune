@@ -1,8 +1,8 @@
 use std::f32::consts::PI;
 
 use tuner_dsp_web::{
-    new_detector, next_output, push_samples, reset, set_calibration_hz, set_min_clarity,
-    set_min_rms, set_mode, set_preset, shutdown,
+    list_presets, new_detector, next_output, push_samples, reset, set_calibration_hz,
+    set_min_clarity, set_min_rms, set_mode, set_preset, shutdown,
 };
 
 fn sine_wave(frequency_hz: f32, sample_rate: u32, frame_size: usize, amplitude: f32) -> Vec<f32> {
@@ -108,4 +108,25 @@ fn tuning_controls_validate_inputs() {
     assert!(!set_mode(u32::MAX, "preset"));
 
     assert!(shutdown(detector_id));
+}
+
+#[test]
+fn exposes_builtin_presets_with_string_metadata() {
+    let presets = list_presets();
+    assert!(presets.len() >= 15);
+
+    let e_standard = presets
+        .iter()
+        .find(|preset| preset.id == "e-standard")
+        .expect("missing e-standard preset");
+    assert_eq!(e_standard.string_count, 6);
+    assert_eq!(e_standard.strings.len(), 6);
+    assert_eq!(e_standard.strings[0].label, "E2");
+
+    let drop_b_9 = presets
+        .iter()
+        .find(|preset| preset.id == "drop-b-9")
+        .expect("missing drop-b-9 preset");
+    assert_eq!(drop_b_9.string_count, 9);
+    assert_eq!(drop_b_9.strings.len(), 9);
 }
