@@ -55,7 +55,7 @@ impl Default for TuningSession {
             preset_id: PresetId::EStandard,
             mode: TuningMode::Preset,
             calibration_hz: 440.0,
-            preset_match_window_cents: 300.0,
+            preset_match_window_cents: 100.0,
         }
     }
 }
@@ -229,13 +229,42 @@ mod tests {
         let mut session = TuningSession::new();
         assert!(session.set_preset("drop-d"));
 
-        let mapped = session.map_detection(measured_pitch(82.41));
+        let mapped = session.map_detection(measured_pitch(73.5));
         assert_eq!(mapped.note_name, "D2");
         assert_eq!(mapped.tuning_profile_id.as_deref(), Some("drop-d"));
         assert_eq!(mapped.string_index, Some(0));
         assert_eq!(mapped.string_count, Some(6));
         assert_eq!(mapped.string_name.as_deref(), Some("D2"));
-        assert!(mapped.cents_off > 100.0);
+        assert!(mapped.cents_off.abs() < 10.0);
+    }
+
+    #[test]
+    fn preset_mode_does_not_force_distant_low_string_match() {
+        let mut session = TuningSession::new();
+        assert!(session.set_preset("drop-d"));
+
+        let mapped = session.map_detection(measured_pitch(82.41));
+        assert_eq!(mapped.note_name, "E2");
+        assert_eq!(mapped.tuning_profile_id.as_deref(), Some("drop-d"));
+        assert!(mapped.string_index.is_none());
+        assert!(mapped.string_name.is_none());
+    }
+
+    #[test]
+    fn supports_8_and_9_string_preset_matching() {
+        let mut session = TuningSession::new();
+        assert!(session.set_preset("fsharp-standard-8"));
+
+        let mapped_8 = session.map_detection(measured_pitch(61.74));
+        assert_eq!(mapped_8.note_name, "B1");
+        assert_eq!(mapped_8.string_count, Some(8));
+        assert_eq!(mapped_8.string_index, Some(1));
+
+        assert!(session.set_preset("drop-b-9"));
+        let mapped_9 = session.map_detection(measured_pitch(61.74));
+        assert_eq!(mapped_9.note_name, "B1");
+        assert_eq!(mapped_9.string_count, Some(9));
+        assert_eq!(mapped_9.string_index, Some(2));
     }
 
     #[test]

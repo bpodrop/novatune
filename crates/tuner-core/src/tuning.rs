@@ -558,6 +558,24 @@ mod tests {
     }
 
     #[test]
+    fn matches_8_string_detectable_low_target() {
+        let preset = preset_by_id(PresetId::FSharpStandard8);
+        let matched = match_frequency_to_preset(61.7, preset, 100.0).unwrap();
+
+        assert_eq!(matched.matched_string.label, "B1");
+        assert_eq!(matched.matched_string.index, 1);
+    }
+
+    #[test]
+    fn matches_9_string_detectable_low_target() {
+        let preset = preset_by_id(PresetId::DropB9);
+        let matched = match_frequency_to_preset(61.7, preset, 100.0).unwrap();
+
+        assert_eq!(matched.matched_string.label, "B1");
+        assert_eq!(matched.matched_string.index, 2);
+    }
+
+    #[test]
     fn rejects_frequency_outside_match_window() {
         let preset = preset_by_id(PresetId::EStandard);
         assert!(match_frequency_to_preset(98.0, preset, 20.0).is_none());

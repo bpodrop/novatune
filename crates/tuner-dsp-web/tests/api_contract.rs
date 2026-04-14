@@ -73,7 +73,7 @@ fn tuning_controls_update_output_mapping() {
     assert!(set_calibration_hz(detector_id, 432.0));
     assert!(set_mode(detector_id, "preset"));
 
-    let frame = sine_wave(82.41, 44_100, 4096, 0.8);
+    let frame = sine_wave(73.42, 44_100, 4096, 0.8);
     let produced = push_samples(detector_id, &frame);
     assert_eq!(produced, 1);
 
@@ -83,7 +83,37 @@ fn tuning_controls_update_output_mapping() {
     assert_eq!(output.string_index, Some(0));
     assert_eq!(output.string_count, Some(6));
     assert_eq!(output.string_name.as_deref(), Some("D2"));
-    assert!(output.cents_off > 150.0);
+    assert!(output.cents_off.abs() < 60.0);
+
+    assert!(shutdown(detector_id));
+}
+
+#[test]
+fn supports_7_8_9_string_preset_mapping() {
+    let detector_id = new_detector(44_100, 4096, 1024);
+    assert_ne!(detector_id, 0);
+    assert!(set_mode(detector_id, "preset"));
+
+    assert!(set_preset(detector_id, "b-standard-7"));
+    assert!(reset(detector_id));
+    assert!(push_samples(detector_id, &sine_wave(61.74, 44_100, 4096, 0.8)) > 0);
+    let output_7 = next_output(detector_id).expect("expected 7-string output");
+    assert_eq!(output_7.string_count, Some(7));
+    assert_eq!(output_7.string_name.as_deref(), Some("B1"));
+
+    assert!(set_preset(detector_id, "fsharp-standard-8"));
+    assert!(reset(detector_id));
+    assert!(push_samples(detector_id, &sine_wave(61.74, 44_100, 4096, 0.8)) > 0);
+    let output_8 = next_output(detector_id).expect("expected 8-string output");
+    assert_eq!(output_8.string_count, Some(8));
+    assert_eq!(output_8.string_name.as_deref(), Some("B1"));
+
+    assert!(set_preset(detector_id, "drop-b-9"));
+    assert!(reset(detector_id));
+    assert!(push_samples(detector_id, &sine_wave(61.74, 44_100, 4096, 0.8)) > 0);
+    let output_9 = next_output(detector_id).expect("expected 9-string output");
+    assert_eq!(output_9.string_count, Some(9));
+    assert_eq!(output_9.string_name.as_deref(), Some("B1"));
 
     assert!(shutdown(detector_id));
 }

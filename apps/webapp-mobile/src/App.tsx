@@ -7,6 +7,7 @@ import {
   listAvailablePresets,
   loadBridge,
   type PresetFamilyFilter,
+  type TuningPresetString,
   type TuningPresetProfile,
   type TunerState,
 } from './tuner'
@@ -125,11 +126,14 @@ function NoteDisplay({
 }: {
   noteName: string
   centsOff: number | null
-  strings: readonly string[]
+  strings: readonly TuningPresetString[]
   stringIndex: number | null
   tuningMode: TuningMode
 }) {
   const hasActiveString = stringIndex !== null && stringIndex >= 0 && stringIndex < strings.length
+  const noMatch = centsOff !== null && !hasActiveString
+  const matchHint =
+    centsOff === null ? 'Waiting signal' : hasActiveString ? null : 'No matching string in this preset'
 
   return (
     <section className="note-display">
@@ -143,21 +147,26 @@ function NoteDisplay({
           role="list"
           aria-label="Preset strings"
         >
-          {strings.map((stringLabel, index) => (
+          {strings.map((stringValue, index) => (
             <span
-              key={`${stringLabel}-${index}`}
+              key={`${stringValue.label}-${index}`}
               role="listitem"
               className={
                 index === stringIndex ? 'note-display-string-chip active' : 'note-display-string-chip'
               }
             >
-              {stringLabel}
+              {`${stringValue.displayNumber}:${stringValue.label}`}
             </span>
           ))}
         </div>
       ) : (
         <p className="note-display-string">Chromatic</p>
       )}
+      {tuningMode === 'preset' && matchHint ? (
+        <p className={noMatch ? 'note-display-match-hint warning' : 'note-display-match-hint'}>
+          {matchHint}
+        </p>
+      ) : null}
     </section>
   )
 }
@@ -727,7 +736,7 @@ function App() {
         <NoteDisplay
           noteName={detection?.noteName ?? '--'}
           centsOff={detection?.centsOff ?? null}
-          strings={selectedPresetMeta?.strings.map((stringValue) => stringValue.label) ?? []}
+          strings={selectedPresetMeta?.strings ?? []}
           stringIndex={activeStringIndex}
           tuningMode={tuningMode}
         />

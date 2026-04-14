@@ -402,6 +402,18 @@
   opacity: 0.62;
 }
 
+.note-display-match-hint {
+  margin: 0.32rem 0 0;
+  color: var(--cli-label);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.note-display-match-hint.warning {
+  color: var(--cli-danger);
+}
+
 .note-display-string {
   margin: 0.18rem 0 0;
   color: var(--cli-label);
