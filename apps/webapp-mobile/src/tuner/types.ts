@@ -18,6 +18,9 @@ export interface DetectionResult {
   rms: number
   centsOff: number
   noteName: string
+  tuningProfileId: string | null
+  stringIndex: number | null
+  stringCount: number | null
   stringName: string | null
   mode: 'preset' | 'chromatic'
   uiState: Extract<TunerState, 'no_signal' | 'searching' | 'unstable' | 'too_low' | 'in_tune' | 'too_high'>

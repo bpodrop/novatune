@@ -10,7 +10,6 @@ import {
 
 type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported'
 type ViewId = 'tuner' | 'settings'
-type PresetId = 'standard_e' | 'drop_d' | 'half_step'
 type ThemeMode = 'dark' | 'light'
 type TuningMode = 'preset' | 'chromatic'
 
@@ -19,21 +18,123 @@ const DEFAULT_MIN_CLARITY = 0.6
 const APP_VERSION = 'V0.1.0'
 const GITHUB_URL = 'https://github.com/bpodrop/novatune'
 
-const PRESETS: Array<{ id: PresetId; label: string }> = [
-  { id: 'standard_e', label: 'STANDARD E' },
-  { id: 'drop_d', label: 'DROP D' },
-  { id: 'half_step', label: 'HALF STEP' },
-]
+const PRESETS = [
+  {
+    id: 'standard_e',
+    label: 'E STANDARD (6)',
+    bridgeId: 'e-standard',
+    strings: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 6,
+  },
+  {
+    id: 'drop_d',
+    label: 'DROP D (6)',
+    bridgeId: 'drop-d',
+    strings: ['D2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 6,
+  },
+  {
+    id: 'half_step',
+    label: 'EB STANDARD (6)',
+    bridgeId: 'eb-standard',
+    strings: ['Eb2', 'Ab2', 'Db3', 'Gb3', 'Bb3', 'Eb4'],
+    stringCount: 6,
+  },
+  {
+    id: 'd_standard',
+    label: 'D STANDARD (6)',
+    bridgeId: 'd-standard',
+    strings: ['D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
+    stringCount: 6,
+  },
+  {
+    id: 'drop_c',
+    label: 'DROP C (6)',
+    bridgeId: 'drop-c',
+    strings: ['C2', 'G2', 'C3', 'F3', 'A3', 'D4'],
+    stringCount: 6,
+  },
+  {
+    id: 'open_g',
+    label: 'OPEN G (6)',
+    bridgeId: 'open-g',
+    strings: ['D2', 'G2', 'D3', 'G3', 'B3', 'D4'],
+    stringCount: 6,
+  },
+  {
+    id: 'open_d',
+    label: 'OPEN D (6)',
+    bridgeId: 'open-d',
+    strings: ['D2', 'A2', 'D3', 'F#3', 'A3', 'D4'],
+    stringCount: 6,
+  },
+  {
+    id: 'dadgad',
+    label: 'DADGAD (6)',
+    bridgeId: 'dadgad',
+    strings: ['D2', 'A2', 'D3', 'G3', 'A3', 'D4'],
+    stringCount: 6,
+  },
+  {
+    id: 'b_standard_7',
+    label: 'B STANDARD (7)',
+    bridgeId: 'b-standard-7',
+    strings: ['B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 7,
+  },
+  {
+    id: 'drop_a_7',
+    label: 'DROP A (7)',
+    bridgeId: 'drop-a-7',
+    strings: ['A1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 7,
+  },
+  {
+    id: 'a_standard_7',
+    label: 'A STANDARD (7)',
+    bridgeId: 'a-standard-7',
+    strings: ['A1', 'D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
+    stringCount: 7,
+  },
+  {
+    id: 'fsharp_standard_8',
+    label: 'F# STANDARD (8)',
+    bridgeId: 'fsharp-standard-8',
+    strings: ['F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 8,
+  },
+  {
+    id: 'e_standard_8',
+    label: 'E STANDARD (8)',
+    bridgeId: 'e-standard-8',
+    strings: ['E1', 'A1', 'D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
+    stringCount: 8,
+  },
+  {
+    id: 'csharp_standard_9',
+    label: 'C# STANDARD (9)',
+    bridgeId: 'csharp-standard-9',
+    strings: ['C#1', 'F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 9,
+  },
+  {
+    id: 'drop_b_9',
+    label: 'DROP B (9)',
+    bridgeId: 'drop-b-9',
+    strings: ['B0', 'F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+    stringCount: 9,
+  },
+] as const
 
-const BRIDGE_PRESET_IDS: Record<PresetId, string> = {
-  standard_e: 'e-standard',
-  drop_d: 'drop-d',
-  half_step: 'eb-standard',
-}
+type PresetId = (typeof PRESETS)[number]['id']
 
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
+}
+
+function presetById(presetId: PresetId) {
+  return PRESETS.find((preset) => preset.id === presetId) ?? PRESETS[0]
 }
 
 function TopAppBar({ onOpenSettings }: { onOpenSettings: () => void }) {
@@ -119,14 +220,18 @@ function ChromaticGauge({ centsOff }: { centsOff: number | null }) {
 function NoteDisplay({
   noteName,
   centsOff,
-  stringName,
+  strings,
+  stringIndex,
   tuningMode,
 }: {
   noteName: string
   centsOff: number | null
-  stringName: string | null
+  strings: readonly string[]
+  stringIndex: number | null
   tuningMode: TuningMode
 }) {
+  const hasActiveString = stringIndex !== null && stringIndex >= 0 && stringIndex < strings.length
+
   return (
     <section className="note-display">
       <p className="note-display-main">{noteName}</p>
@@ -134,7 +239,23 @@ function NoteDisplay({
         {centsOff === null ? '-- ct' : `${centsOff >= 0 ? '+' : ''}${centsOff.toFixed(1)} ct`}
       </p>
       {tuningMode === 'preset' ? (
-        <p className="note-display-string">{stringName ? `String ${stringName}` : 'String --'}</p>
+        <div
+          className={hasActiveString ? 'note-display-strings' : 'note-display-strings unmatched'}
+          role="list"
+          aria-label="Preset strings"
+        >
+          {strings.map((stringLabel, index) => (
+            <span
+              key={`${stringLabel}-${index}`}
+              role="listitem"
+              className={
+                index === stringIndex ? 'note-display-string-chip active' : 'note-display-string-chip'
+              }
+            >
+              {stringLabel}
+            </span>
+          ))}
+        </div>
       ) : (
         <p className="note-display-string">Chromatic</p>
       )}
@@ -178,7 +299,7 @@ function TuningPresetPicker({
   const activeLabel =
     tuningMode === 'chromatic'
       ? 'CHROMATIC'
-      : PRESETS.find((preset) => preset.id === selectedPreset)?.label ?? 'SELECT PRESET'
+      : presetById(selectedPreset).label
 
   return (
     <section className="preset-picker">
@@ -474,6 +595,13 @@ function App() {
   const calibrationRef = useRef<number>(calibrationHz)
   const minRmsRef = useRef<number>(minRms)
   const minClarityRef = useRef<number>(minClarity)
+  const selectedPresetMeta = useMemo(() => presetById(selectedPreset), [selectedPreset])
+  const activeStringIndex =
+    tuningMode === 'preset' &&
+    detection?.mode === 'preset' &&
+    (detection.tuningProfileId === null || detection.tuningProfileId === selectedPresetMeta.bridgeId)
+      ? detection?.stringIndex ?? null
+      : null
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -526,7 +654,7 @@ function App() {
           hopSize,
         })
         session.setMode(tuningModeRef.current)
-        session.setPreset(BRIDGE_PRESET_IDS[selectedPresetRef.current])
+        session.setPreset(presetById(selectedPresetRef.current).bridgeId)
         session.setCalibrationHz(calibrationRef.current)
         session.setMinRms(minRmsRef.current)
         session.setMinClarity(minClarityRef.current)
@@ -569,14 +697,14 @@ function App() {
     }
     try {
       session.setMode(tuningMode)
-      session.setPreset(BRIDGE_PRESET_IDS[selectedPreset])
+      session.setPreset(selectedPresetMeta.bridgeId)
       session.setCalibrationHz(calibrationHz)
       session.setMinRms(minRms)
       session.setMinClarity(minClarity)
     } catch (error) {
       console.error('Failed to sync tuning config to wasm session', error)
     }
-  }, [calibrationHz, minClarity, minRms, selectedPreset, tuningMode])
+  }, [calibrationHz, minClarity, minRms, selectedPresetMeta.bridgeId, selectedPreset, tuningMode])
 
   return (
     <main className="app-shell" data-theme={theme}>
@@ -595,7 +723,8 @@ function App() {
         <NoteDisplay
           noteName={detection?.noteName ?? '--'}
           centsOff={detection?.centsOff ?? null}
-          stringName={detection?.stringName ?? null}
+          strings={selectedPresetMeta.strings}
+          stringIndex={activeStringIndex}
           tuningMode={tuningMode}
         />
         <SignalInfo frequencyHz={detection?.frequencyHz ?? null} centsOff={detection?.centsOff ?? null} />

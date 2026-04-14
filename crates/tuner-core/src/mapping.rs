@@ -33,6 +33,9 @@ pub struct MappedDetection {
     pub rms: f32,
     pub cents_off: f32,
     pub note_name: String,
+    pub tuning_profile_id: Option<String>,
+    pub string_index: Option<u8>,
+    pub string_count: Option<u8>,
     pub string_name: Option<String>,
     pub mode: TuningMode,
     pub ui_state: UiState,
@@ -102,46 +105,61 @@ impl TuningSession {
 
     pub fn map_detection(&self, detection: PitchDetectionResult) -> MappedDetection {
         let normalized_frequency_hz = detection.frequency_hz * (440.0 / self.calibration_hz);
-        let (cents_off, note_name, string_name) = match self.mode {
-            TuningMode::Preset => {
-                let preset = preset_by_id(self.preset_id);
-                let preset_match = match_frequency_to_preset(
-                    normalized_frequency_hz,
-                    preset,
-                    self.preset_match_window_cents,
-                );
-                match preset_match {
-                    Some(matched) => {
-                        let label = matched.matched_string.label.to_string();
-                        (matched.cents_from_target, label.clone(), Some(label))
-                    }
-                    None => {
-                        let note_estimate = Note::estimate(normalized_frequency_hz);
-                        let fallback_cents = note_estimate
-                            .as_ref()
-                            .map(|note| note.cents_offset)
-                            .unwrap_or(0.0);
-                        let fallback_name = note_estimate
-                            .as_ref()
-                            .map(|note| note.note_name.clone())
-                            .unwrap_or_else(|| "--".to_string());
-                        (fallback_cents, fallback_name, None)
+        let (cents_off, note_name, tuning_profile_id, string_index, string_count, string_name) =
+            match self.mode {
+                TuningMode::Preset => {
+                    let preset = preset_by_id(self.preset_id);
+                    let preset_match = match_frequency_to_preset(
+                        normalized_frequency_hz,
+                        preset,
+                        self.preset_match_window_cents,
+                    );
+                    match preset_match {
+                        Some(matched) => {
+                            let label = matched.matched_string.label.to_string();
+                            (
+                                matched.cents_from_target,
+                                label.clone(),
+                                Some(matched.preset_id.as_str().to_string()),
+                                Some(matched.matched_string.index),
+                                Some(preset.string_count() as u8),
+                                Some(label),
+                            )
+                        }
+                        None => {
+                            let note_estimate = Note::estimate(normalized_frequency_hz);
+                            let fallback_cents = note_estimate
+                                .as_ref()
+                                .map(|note| note.cents_offset)
+                                .unwrap_or(0.0);
+                            let fallback_name = note_estimate
+                                .as_ref()
+                                .map(|note| note.note_name.clone())
+                                .unwrap_or_else(|| "--".to_string());
+                            (
+                                fallback_cents,
+                                fallback_name,
+                                Some(preset.id.as_str().to_string()),
+                                None,
+                                Some(preset.string_count() as u8),
+                                None,
+                            )
+                        }
                     }
                 }
-            }
-            TuningMode::Chromatic => {
-                let note_estimate = Note::estimate(normalized_frequency_hz);
-                let cents = note_estimate
-                    .as_ref()
-                    .map(|note| note.cents_offset)
-                    .unwrap_or(0.0);
-                let note_name = note_estimate
-                    .as_ref()
-                    .map(|note| note.note_name.clone())
-                    .unwrap_or_else(|| "--".to_string());
-                (cents, note_name, None)
-            }
-        };
+                TuningMode::Chromatic => {
+                    let note_estimate = Note::estimate(normalized_frequency_hz);
+                    let cents = note_estimate
+                        .as_ref()
+                        .map(|note| note.cents_offset)
+                        .unwrap_or(0.0);
+                    let note_name = note_estimate
+                        .as_ref()
+                        .map(|note| note.note_name.clone())
+                        .unwrap_or_else(|| "--".to_string());
+                    (cents, note_name, None, None, None, None)
+                }
+            };
 
         MappedDetection {
             frequency_hz: detection.frequency_hz,
@@ -150,6 +168,9 @@ impl TuningSession {
             rms: detection.rms,
             cents_off,
             note_name,
+            tuning_profile_id,
+            string_index,
+            string_count,
             string_name,
             mode: self.mode,
             ui_state: resolve_ui_state(detection.confidence, detection.clarity, cents_off),
@@ -210,6 +231,9 @@ mod tests {
 
         let mapped = session.map_detection(measured_pitch(82.41));
         assert_eq!(mapped.note_name, "D2");
+        assert_eq!(mapped.tuning_profile_id.as_deref(), Some("drop-d"));
+        assert_eq!(mapped.string_index, Some(0));
+        assert_eq!(mapped.string_count, Some(6));
         assert_eq!(mapped.string_name.as_deref(), Some("D2"));
         assert!(mapped.cents_off > 100.0);
     }
@@ -221,6 +245,9 @@ mod tests {
 
         let mapped = session.map_detection(measured_pitch(82.41));
         assert_eq!(mapped.mode, TuningMode::Chromatic);
+        assert!(mapped.tuning_profile_id.is_none());
+        assert!(mapped.string_index.is_none());
+        assert!(mapped.string_count.is_none());
         assert!(mapped.string_name.is_none());
     }
 }

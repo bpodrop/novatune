@@ -79,6 +79,10 @@ fn tuning_controls_update_output_mapping() {
 
     let output = next_output(detector_id).expect("expected tuned output");
     assert_eq!(output.note_name, "D2");
+    assert_eq!(output.tuning_profile_id.as_deref(), Some("drop-d"));
+    assert_eq!(output.string_index, Some(0));
+    assert_eq!(output.string_count, Some(6));
+    assert_eq!(output.string_name.as_deref(), Some("D2"));
     assert!(output.cents_off > 150.0);
 
     assert!(shutdown(detector_id));

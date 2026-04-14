@@ -333,6 +333,37 @@
   line-height: 1.1;
 }
 
+.note-display-strings {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.note-display-string-chip {
+  min-width: 2.35rem;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--cli-soft-border-mid);
+  background: var(--cli-panel-alt);
+  color: var(--cli-label);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.note-display-string-chip.active {
+  border-color: var(--cli-accent-active-border);
+  background: var(--cli-accent-active-bg);
+  color: var(--cli-on-accent);
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
+}
+
+.note-display-strings.unmatched .note-display-string-chip {
+  opacity: 0.62;
+}
+
 .note-display-string {
   margin: 0.18rem 0 0;
   color: var(--cli-label);

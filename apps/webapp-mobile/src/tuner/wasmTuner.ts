@@ -20,6 +20,9 @@ interface RawBridgeOutput {
   rms: number
   cents_off: number
   note_name: string
+  tuning_profile_id?: string
+  string_index?: number
+  string_count?: number
   string_name?: string
   mode?: 'preset' | 'chromatic'
   ui_state: DetectionResult['uiState']
@@ -53,6 +56,9 @@ function mapOutput(raw: RawBridgeOutput | undefined): DetectionResult | null {
     rms: raw.rms,
     centsOff: raw.cents_off,
     noteName: raw.note_name,
+    tuningProfileId: raw.tuning_profile_id ?? null,
+    stringIndex: raw.string_index ?? null,
+    stringCount: raw.string_count ?? null,
     stringName: raw.string_name ?? null,
     mode: raw.mode ?? 'preset',
     uiState: raw.ui_state,

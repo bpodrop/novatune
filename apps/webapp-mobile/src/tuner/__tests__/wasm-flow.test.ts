@@ -45,6 +45,9 @@ describe('wasm tuner integration flow', () => {
       rms: 0.19,
       centsOff: 0.4,
       noteName: 'A4',
+      tuningProfileId: 'e-standard',
+      stringIndex: 1,
+      stringCount: 6,
       stringName: 'A4',
       mode: 'preset',
       uiState: 'in_tune',
@@ -58,6 +61,9 @@ describe('wasm tuner integration flow', () => {
         rms: bridgeOutput.rms,
         cents_off: bridgeOutput.centsOff,
         note_name: bridgeOutput.noteName,
+        tuning_profile_id: bridgeOutput.tuningProfileId ?? undefined,
+        string_index: bridgeOutput.stringIndex ?? undefined,
+        string_count: bridgeOutput.stringCount ?? undefined,
         string_name: bridgeOutput.stringName ?? undefined,
         mode: bridgeOutput.mode,
         ui_state: bridgeOutput.uiState,
@@ -77,6 +83,9 @@ describe('wasm tuner integration flow', () => {
     expect(results[0].clarity).toBeCloseTo(bridgeOutput.clarity, 5)
     expect(results[0].rms).toBeCloseTo(bridgeOutput.rms, 5)
     expect(results[0].noteName).toBe('A4')
+    expect(results[0].tuningProfileId).toBe('e-standard')
+    expect(results[0].stringIndex).toBe(1)
+    expect(results[0].stringCount).toBe(6)
     expect(results[0].uiState).toBe('in_tune')
     expect(session.getState()).toBe('in_tune')
 
