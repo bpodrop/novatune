@@ -13,12 +13,11 @@ Workspace Rust (déclaré dans `Cargo.toml`) :
 - `crates/tuner-dsp-web`
 - `crates/tuner-dsp-embedded`
 - `apps/tuner-cli`
-- `apps/tuner-embedded`
 
-Applications frontend présentes :
+Applications présentes :
 
 - `apps/webapp-mobile` (client web principal, PWA mobile-first)
-- `apps/tuner-web` (client baseline/legacy conservé dans le repo)
+- `apps/tuner-cli` (client terminal live)
 
 ## Architecture fonctionnelle
 
@@ -26,7 +25,7 @@ Applications frontend présentes :
 - `tuner-dsp-algo` : détection de pitch (NSDF/MPM), filtrage et stabilité.
 - `tuner-dsp-web` : bridge WASM pour le web.
 - `tuner-dsp-native` : intégration audio native (CLI).
-- `tuner-dsp-embedded` : intégration embarquée.
+- `tuner-dsp-embedded` : intégration embarquée conservée au niveau crate, sans app active dédiée.
 - `tuner-cli` : interface terminale live + commandes utilitaires.
 - `webapp-mobile` : UI React/Vite branchée sur le bridge WASM.
 
@@ -87,4 +86,3 @@ Paramètres recommandés :
 
 - `apps/webapp-mobile/README.md`
 - `apps/tuner-cli/README.md`
-- `apps/tuner-web/README.md`

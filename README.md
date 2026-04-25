@@ -11,7 +11,6 @@ Applications principales :
 - `apps/webapp-mobile` : client web/PWA principal
 - `apps/tuner-cli` : client terminal live (TUI)
 
-Applications conservées :
+Support technique conservé :
 
-- `apps/tuner-web` : client baseline/legacy
-- `apps/tuner-embedded` : cible embarquée
+- `crates/tuner-dsp-embedded` : couche embarquée encore présente au niveau crate, sans app dédiée active
