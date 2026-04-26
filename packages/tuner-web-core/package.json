@@ -1,0 +1,6 @@
+{
+  "name": "@novatune/tuner-web-core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module"
+}

@@ -52,6 +52,8 @@ pub struct TunerOutput {
     pub mode: TunerMode,
     pub measured_frequency_hz: Option<f32>,
     pub confidence: f32,
+    pub clarity: f32,
+    pub rms: f32,
     pub detected_note: Option<NoteEstimate>,
     pub display_cents: Option<f32>,
     pub target: Option<TuningTarget>,

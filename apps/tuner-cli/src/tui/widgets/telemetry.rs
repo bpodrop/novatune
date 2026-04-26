@@ -33,19 +33,19 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState, screen_class:
 fn primary_metrics(state: &TunerUiState, screen_class: ScreenClass) -> Line<'static> {
     let mut spans = vec![
         Span::styled("TARGET ", theme::label()),
-        Span::styled(state.target_label.clone(), theme::telemetry()),
+        Span::styled(state.pitch.target_label.clone(), theme::telemetry()),
         Span::styled("   TARGET Hz ", theme::label()),
-        Span::styled(format_frequency(state.target_hz), theme::telemetry()),
+        Span::styled(format_frequency(state.pitch.target_hz), theme::telemetry()),
         Span::styled("   STABILITY ", theme::label()),
-        Span::styled(format!("{}%", state.stability_percent), theme::telemetry()),
+        Span::styled(format!("{}%", state.telemetry.stability_percent), theme::telemetry()),
     ];
 
     if !matches!(screen_class, ScreenClass::Compact) {
         spans.extend([
             Span::styled("   NOISE ", theme::label()),
-            Span::styled(format_noise(state.noise_percent), theme::telemetry()),
+            Span::styled(format_noise(state.telemetry.noise_percent), theme::telemetry()),
             Span::styled("   CONF ", theme::label()),
-            Span::styled(format_confidence(state.confidence), theme::telemetry()),
+            Span::styled(format_confidence(state.telemetry.confidence), theme::telemetry()),
         ]);
     }
 
@@ -55,9 +55,9 @@ fn primary_metrics(state: &TunerUiState, screen_class: ScreenClass) -> Line<'sta
 fn secondary_metrics(state: &TunerUiState, screen_class: ScreenClass) -> Line<'static> {
     let mut spans = vec![
         Span::styled("HISTORY ", theme::label()),
-        Span::styled(history::sparkline(&state.history), theme::telemetry()),
+        Span::styled(history::sparkline(&state.telemetry.history), theme::telemetry()),
         Span::styled("   ACTION ", theme::label()),
-        Span::styled(state.direction_label(), theme::emphasis(state.phase)),
+        Span::styled(state.direction_label(), theme::emphasis(state.pitch.phase)),
     ];
 
     if !matches!(screen_class, ScreenClass::Compact) {
@@ -65,7 +65,7 @@ fn secondary_metrics(state: &TunerUiState, screen_class: ScreenClass) -> Line<'s
             Span::styled("   PHASE ", theme::label()),
             Span::styled(
                 state.badge_label(),
-                theme::badge(state.phase, state.animation_tick),
+                theme::badge(state.pitch.phase, state.animation_tick),
             ),
         ]);
     }

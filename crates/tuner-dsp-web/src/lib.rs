@@ -2,10 +2,8 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Mutex, OnceLock};
 
 use serde::{Deserialize, Serialize};
-use tuner_core::{
-    Note, PitchDetectionResult, TuningSession, UiState, all_presets, resolve_ui_state,
-};
-use tuner_dsp_algo::{PitchDetector, PitchDetectorConfig};
+use tuner_core::{TunerMode, TunerOutput, UiState, all_presets, default_preset, preset_by_id};
+use tuner_engine::{PitchDetectorConfig, SessionMode, TunerConfig, TunerEngine};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DetectionOutput {
@@ -39,55 +37,59 @@ pub struct PresetOutput {
     pub strings: Vec<PresetStringOutput>,
 }
 
-impl From<PitchDetectionResult> for DetectionOutput {
-    fn from(value: PitchDetectionResult) -> Self {
-        let note_estimate = Note::estimate(value.frequency_hz);
-        let cents_off = note_estimate
-            .as_ref()
-            .map(|note| note.cents_offset)
-            .unwrap_or(0.0);
-        let note_name = note_estimate
-            .as_ref()
-            .map(|note| note.note_name.clone())
-            .unwrap_or_else(|| "--".to_string());
-        let ui_state = resolve_ui_state(value.confidence, value.clarity, cents_off);
-
-        Self {
-            frequency_hz: value.frequency_hz,
-            confidence: value.confidence,
-            clarity: value.clarity,
-            rms: value.rms,
-            cents_off,
-            note_name,
-            tuning_profile_id: None,
-            string_index: None,
-            string_count: None,
-            string_name: None,
-            mode: "chromatic".to_string(),
-            ui_state: ui_state_label(ui_state).to_string(),
+fn map_output(output: TunerOutput) -> DetectionOutput {
+    let (tuning_profile_id, string_count) = match output.mode {
+        TunerMode::Preset(preset_id) => {
+            let preset = preset_by_id(preset_id);
+            (
+                Some(preset_id.as_str().to_string()),
+                Some(preset.string_count() as u8),
+            )
         }
+        TunerMode::Chromatic => (None, None),
+    };
+
+    let note_name = output
+        .target
+        .as_ref()
+        .map(|target| target.note_name.clone())
+        .or_else(|| output.detected_note.as_ref().map(|note| note.note_name.clone()))
+        .unwrap_or_else(|| "--".to_string());
+    let cents_off = output
+        .display_cents
+        .or_else(|| output.detected_note.as_ref().map(|note| note.cents_offset))
+        .unwrap_or(0.0);
+    let string_index = output
+        .target
+        .as_ref()
+        .and_then(|target| target.string.map(|string| string.index));
+    let string_name = output.target.as_ref().and_then(|target| {
+        target
+            .string
+            .map(|string| string.label.to_string())
+            .or_else(|| Some(target.note_name.clone()))
+    });
+
+    DetectionOutput {
+        frequency_hz: output.measured_frequency_hz.unwrap_or_default(),
+        confidence: output.confidence,
+        clarity: output.clarity,
+        rms: output.rms,
+        cents_off,
+        note_name,
+        tuning_profile_id,
+        string_index,
+        string_count,
+        string_name,
+        mode: mode_label(output.mode).to_string(),
+        ui_state: ui_state_label(output.ui_state).to_string(),
     }
 }
 
-fn map_detection_for_tuning(
-    value: PitchDetectionResult,
-    tuning_session: &TuningSession,
-) -> DetectionOutput {
-    let mapped = tuning_session.map_detection(value);
-
-    DetectionOutput {
-        frequency_hz: mapped.frequency_hz,
-        confidence: mapped.confidence,
-        clarity: mapped.clarity,
-        rms: mapped.rms,
-        cents_off: mapped.cents_off,
-        note_name: mapped.note_name,
-        tuning_profile_id: mapped.tuning_profile_id,
-        string_index: mapped.string_index,
-        string_count: mapped.string_count,
-        string_name: mapped.string_name,
-        mode: mapped.mode.as_str().to_string(),
-        ui_state: ui_state_label(mapped.ui_state).to_string(),
+fn mode_label(mode: TunerMode) -> &'static str {
+    match mode {
+        TunerMode::Chromatic => "chromatic",
+        TunerMode::Preset(_) => "preset",
     }
 }
 
@@ -104,9 +106,8 @@ fn ui_state_label(ui_state: UiState) -> &'static str {
 
 #[derive(Debug)]
 struct DetectorHandle {
-    detector: PitchDetector,
+    engine: TunerEngine,
     config: PitchDetectorConfig,
-    tuning_session: TuningSession,
     pending_samples: Vec<f32>,
     outputs: VecDeque<DetectionOutput>,
 }
@@ -160,13 +161,14 @@ pub fn new_detector(sample_rate: u32, frame_size: usize, hop_size: usize) -> u32
         hop_size,
         ..PitchDetectorConfig::default()
     };
+    let engine_config =
+        TunerConfig::from_detector_config(config, SessionMode::preset(default_preset().id));
 
     lock.detectors.insert(
         id,
         DetectorHandle {
-            detector: PitchDetector::new(config),
+            engine: TunerEngine::new(config, engine_config),
             config,
-            tuning_session: TuningSession::new(),
             pending_samples: Vec::new(),
             outputs: VecDeque::new(),
         },
@@ -200,10 +202,9 @@ pub fn push_samples(detector_id: u32, samples: &[f32]) -> usize {
     let mut produced = 0;
     while handle.pending_samples.len() >= handle.config.frame_size {
         let frame = &handle.pending_samples[..handle.config.frame_size];
-        if let Some(output) = handle.detector.detect_pitch(frame) {
-            handle
-                .outputs
-                .push_back(map_detection_for_tuning(output, &handle.tuning_session));
+        let output = handle.engine.process_frame(frame);
+        if output.measured_frequency_hz.is_some() {
+            handle.outputs.push_back(map_output(output));
             produced += 1;
         }
 
@@ -230,10 +231,9 @@ pub fn reset(detector_id: u32) -> bool {
         return false;
     };
 
-    handle.detector = PitchDetector::new(handle.config);
+    handle.engine.reset();
     handle.pending_samples.clear();
     handle.outputs.clear();
-
     true
 }
 
@@ -245,7 +245,7 @@ pub fn set_preset(detector_id: u32, preset_id: &str) -> bool {
         return false;
     };
 
-    handle.tuning_session.set_preset(preset_id)
+    handle.engine.set_preset_by_str(preset_id)
 }
 
 pub fn set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
@@ -256,7 +256,7 @@ pub fn set_calibration_hz(detector_id: u32, calibration_hz: f32) -> bool {
         return false;
     };
 
-    handle.tuning_session.set_calibration_hz(calibration_hz)
+    handle.engine.set_calibration_hz(calibration_hz)
 }
 
 pub fn set_mode(detector_id: u32, mode: &str) -> bool {
@@ -267,7 +267,7 @@ pub fn set_mode(detector_id: u32, mode: &str) -> bool {
         return false;
     };
 
-    handle.tuning_session.set_mode(mode)
+    handle.engine.set_mode_by_str(mode)
 }
 
 pub fn set_preset_match_window_cents(detector_id: u32, window_cents: f32) -> bool {
@@ -278,9 +278,7 @@ pub fn set_preset_match_window_cents(detector_id: u32, window_cents: f32) -> boo
         return false;
     };
 
-    handle
-        .tuning_session
-        .set_preset_match_window_cents(window_cents)
+    handle.engine.set_preset_match_window_cents(window_cents)
 }
 
 pub fn set_min_rms(detector_id: u32, min_rms: f32) -> bool {
@@ -291,7 +289,7 @@ pub fn set_min_rms(detector_id: u32, min_rms: f32) -> bool {
         return false;
     };
 
-    handle.detector.set_min_rms(min_rms)
+    handle.engine.set_min_rms(min_rms)
 }
 
 pub fn set_min_clarity(detector_id: u32, min_clarity: f32) -> bool {
@@ -302,7 +300,7 @@ pub fn set_min_clarity(detector_id: u32, min_clarity: f32) -> bool {
         return false;
     };
 
-    handle.detector.set_min_clarity(min_clarity)
+    handle.engine.set_min_clarity(min_clarity)
 }
 
 pub fn shutdown(detector_id: u32) -> bool {

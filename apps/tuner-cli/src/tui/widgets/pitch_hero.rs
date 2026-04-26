@@ -59,69 +59,70 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState, screen_class:
 fn note_block(state: &TunerUiState, screen_class: ScreenClass) -> Vec<Line<'static>> {
     if matches!(screen_class, ScreenClass::Compact) {
         vec![Line::from(Span::styled(
-            format!("[ {} ]", state.note_label),
-            theme::note(state.phase),
+            format!("[ {} ]", state.pitch.note_label),
+            theme::note(state.pitch.phase),
         ))]
     } else {
         vec![
             Line::from(Span::styled("DETECTED NOTE", theme::muted())),
             Line::from(Span::styled(
-                format!("[ {} ]", state.note_label),
-                theme::note(state.phase),
+                format!("[ {} ]", state.pitch.note_label),
+                theme::note(state.pitch.phase),
             )),
         ]
     }
 }
 
 fn metrics_line(state: &TunerUiState, screen_class: ScreenClass) -> Line<'static> {
-    let offset_style = match state.phase {
+    let offset_style = match state.pitch.phase {
         SignalPhase::NoSignal => theme::label(),
-        _ => theme::emphasis(state.phase),
+        _ => theme::emphasis(state.pitch.phase),
     };
     let target_display = state
+        .pitch
         .string_label
         .as_ref()
-        .map(|label| format!("{label} {}", state.target_label))
-        .unwrap_or_else(|| state.target_label.clone());
+        .map(|label| format!("{label} {}", state.pitch.target_label))
+        .unwrap_or_else(|| state.pitch.target_label.clone());
 
     if matches!(screen_class, ScreenClass::Compact) {
         Line::from(vec![
-            Span::styled(format_frequency(state.frequency_hz), theme::telemetry()),
+            Span::styled(format_frequency(state.pitch.frequency_hz), theme::telemetry()),
             Span::styled("   ", theme::label()),
-            Span::styled(format_cents(state.cents_off, state.phase), offset_style),
+            Span::styled(format_cents(state.pitch.cents_off, state.pitch.phase), offset_style),
             Span::styled("   ", theme::label()),
-            Span::styled(target_display, theme::note(state.phase)),
+            Span::styled(target_display, theme::note(state.pitch.phase)),
         ])
     } else {
         Line::from(vec![
             Span::styled("FREQ ", theme::label()),
-            Span::styled(format_frequency(state.frequency_hz), theme::telemetry()),
+            Span::styled(format_frequency(state.pitch.frequency_hz), theme::telemetry()),
             Span::styled("   OFFSET ", theme::label()),
-            Span::styled(format_cents(state.cents_off, state.phase), offset_style),
+            Span::styled(format_cents(state.pitch.cents_off, state.pitch.phase), offset_style),
             Span::styled("   TARGET ", theme::label()),
-            Span::styled(target_display, theme::note(state.phase)),
+            Span::styled(target_display, theme::note(state.pitch.phase)),
         ])
     }
 }
 
 fn status_line(state: &TunerUiState, screen_class: ScreenClass) -> Line<'static> {
-    let vector = direction_vector(state.phase, state.animation_tick);
+    let vector = direction_vector(state.pitch.phase, state.animation_tick);
     if matches!(screen_class, ScreenClass::Compact) {
         Line::from(vec![
             Span::styled(vector, theme::muted()),
             Span::styled(" ", theme::muted()),
-            Span::styled(state.status_line, theme::emphasis(state.phase)),
+            Span::styled(state.pitch.status_line, theme::emphasis(state.pitch.phase)),
             Span::styled("   ", theme::label()),
-            Span::styled(state.direction_label(), theme::note(state.phase)),
+            Span::styled(state.direction_label(), theme::note(state.pitch.phase)),
         ])
     } else {
         Line::from(vec![
             Span::styled(vector, theme::muted()),
             Span::styled("   ", theme::muted()),
             Span::styled("STATUS ", theme::label()),
-            Span::styled(state.status_line, theme::emphasis(state.phase)),
+            Span::styled(state.pitch.status_line, theme::emphasis(state.pitch.phase)),
             Span::styled("   ACTION ", theme::label()),
-            Span::styled(state.direction_label(), theme::note(state.phase)),
+            Span::styled(state.direction_label(), theme::note(state.pitch.phase)),
         ])
     }
 }

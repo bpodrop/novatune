@@ -1,10 +1,9 @@
-mod app;
 mod tui;
 mod ui;
 
-use app::SessionMode;
 use tui::{run_demo_tui, run_live_tui};
 use tuner_core::{Note, PresetId, default_preset, preset_by_id};
+use tuner_engine::SessionMode;
 use ui::{SplashOutcome, run_splashscreen};
 
 const DEFAULT_A4_HZ: f32 = 440.0;

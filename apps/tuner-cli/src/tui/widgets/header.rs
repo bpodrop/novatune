@@ -16,7 +16,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState) {
         .border_style(theme::chrome())
         .title(Line::from(vec![
             Span::styled(" ", theme::label()),
-            Span::styled(state.app_label, theme::title()),
+            Span::styled(state.header.app_label, theme::title()),
             Span::styled(live_label, theme::label()),
         ]));
     let inner = block.inner(area);
@@ -54,7 +54,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState) {
     frame.render_widget(
         Paragraph::new(Line::from(Span::styled(
             format!(" {} ", state.badge_label()),
-            theme::badge(state.phase, state.animation_tick),
+            theme::badge(state.pitch.phase, state.animation_tick),
         )))
         .alignment(Alignment::Right),
         top[1],
@@ -63,9 +63,9 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState) {
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::styled("PROFILE ", theme::label()),
-            Span::styled(&state.profile_label, theme::telemetry()),
+            Span::styled(&state.header.profile_label, theme::telemetry()),
             Span::styled("   MODE ", theme::label()),
-            Span::styled(&state.mode_label, theme::telemetry()),
+            Span::styled(&state.header.mode_label, theme::telemetry()),
         ])),
         bottom[0],
     );
@@ -73,7 +73,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState) {
         Paragraph::new(Line::from(vec![
             Span::styled("SR ", theme::label()),
             Span::styled(
-                format!("{:.1}kHz", state.sample_rate_hz as f32 / 1000.0),
+                format!("{:.1}kHz", state.header.sample_rate_hz as f32 / 1000.0),
                 theme::telemetry(),
             ),
         ])),
@@ -83,8 +83,8 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState) {
         Paragraph::new(Line::from(vec![
             Span::styled("SIGNAL ", theme::label()),
             Span::styled(
-                state.signal_label,
-                theme::badge(state.phase, state.animation_tick),
+                state.header.signal_label,
+                theme::badge(state.pitch.phase, state.animation_tick),
             ),
         ]))
         .alignment(Alignment::Right),

@@ -1,11 +1,10 @@
-use crate::app::SessionMode;
+use crate::SessionMode;
 use std::collections::VecDeque;
 use tuner_core::{
-    Cents, MeasuredPitch, Note, NoteEstimate, PresetId, TunerMode, TunerOutput, TuningTarget,
-    UiState, default_preset, preset_by_id,
+    Cents, MeasuredPitch, Note, NoteEstimate, PresetId, TunerMode, TunerOutput, TuningSession,
+    TuningTarget, UiState, default_preset, preset_by_id,
 };
 use tuner_dsp_algo::{PitchDetector, PitchDetectorConfig};
-use tuner_dsp_native::TuningSession;
 
 const NOTE_HYSTERESIS_CENTS: f32 = 35.0;
 
@@ -48,6 +47,7 @@ impl TunerConfig {
 #[derive(Debug, Clone)]
 pub struct TunerEngine {
     detector: PitchDetector,
+    detector_config: PitchDetectorConfig,
     tuning_session: TuningSession,
     config: TunerConfig,
     last_preset_id: PresetId,
@@ -70,9 +70,12 @@ impl TunerEngine {
         let mut tuning_session = TuningSession::new();
         let _ = tuning_session.set_preset(initial_preset_id.as_str());
         let _ = tuning_session.set_calibration_hz(config.calibration_hz);
+        let _ = tuning_session
+            .set_preset_match_window_cents(config.preset_match_window_cents);
 
-        Self {
+        let mut engine = Self {
             detector: PitchDetector::new(detector_config),
+            detector_config,
             tuning_session,
             last_preset_id: initial_preset_id,
             config,
@@ -81,44 +84,14 @@ impl TunerEngine {
             stable_pitch_count: 0,
             stable_string_count: 0,
             last_matched_string_index: None,
-        }
+        };
+        engine.sync_session_mode();
+        engine
     }
 
     pub fn process_frame(&mut self, frame: &[f32]) -> TunerOutput {
         let detection = self.detector.detect_pitch(frame);
         self.process_detection(detection)
-    }
-
-    pub fn session_mode(&self) -> SessionMode {
-        self.config.session_mode
-    }
-
-    pub fn set_session_mode(&mut self, mode: SessionMode) {
-        if let Some(preset_id) = mode.current_preset() {
-            self.last_preset_id = preset_id;
-            let _ = self.tuning_session.set_preset(preset_id.as_str());
-        }
-        self.config.session_mode = mode;
-        self.reset_tracking();
-    }
-
-    pub fn toggle_analyze_mode(&mut self) -> Option<SessionMode> {
-        let next_mode = match self.config.session_mode {
-            SessionMode::Analyze(TunerMode::Chromatic) => SessionMode::preset(self.last_preset_id),
-            SessionMode::Analyze(TunerMode::Preset(preset_id)) => {
-                self.last_preset_id = preset_id;
-                SessionMode::chromatic()
-            }
-            SessionMode::Target(_) => return None,
-        };
-
-        self.set_session_mode(next_mode);
-        Some(next_mode)
-    }
-
-    pub fn select_preset(&mut self, preset_id: PresetId) -> PresetId {
-        self.set_session_mode(SessionMode::preset(preset_id));
-        preset_id
     }
 
     pub fn process_detection(&mut self, detection: Option<MeasuredPitch>) -> TunerOutput {
@@ -266,6 +239,113 @@ impl TunerEngine {
         }
     }
 
+    pub fn session_mode(&self) -> SessionMode {
+        self.config.session_mode
+    }
+
+    pub fn active_preset_id(&self) -> PresetId {
+        match self.config.session_mode {
+            SessionMode::Analyze(TunerMode::Preset(preset_id)) => preset_id,
+            _ => self.last_preset_id,
+        }
+    }
+
+    pub fn set_session_mode(&mut self, mode: SessionMode) {
+        self.config.session_mode = mode;
+        self.sync_session_mode();
+        self.reset_tracking();
+    }
+
+    pub fn toggle_analyze_mode(&mut self) -> Option<SessionMode> {
+        let next_mode = match self.config.session_mode {
+            SessionMode::Analyze(TunerMode::Chromatic) => SessionMode::preset(self.last_preset_id),
+            SessionMode::Analyze(TunerMode::Preset(preset_id)) => {
+                self.last_preset_id = preset_id;
+                SessionMode::chromatic()
+            }
+            SessionMode::Target(_) => return None,
+        };
+
+        self.set_session_mode(next_mode);
+        Some(next_mode)
+    }
+
+    pub fn select_preset(&mut self, preset_id: PresetId) -> PresetId {
+        self.set_preset(preset_id);
+        preset_id
+    }
+
+    pub fn set_preset(&mut self, preset_id: PresetId) {
+        self.last_preset_id = preset_id;
+        let _ = self.tuning_session.set_preset(preset_id.as_str());
+        if matches!(self.config.session_mode, SessionMode::Analyze(TunerMode::Preset(_))) {
+            self.config.session_mode = SessionMode::preset(preset_id);
+        }
+        self.reset_tracking();
+    }
+
+    pub fn set_preset_by_str(&mut self, preset_id: &str) -> bool {
+        let Some(parsed) = PresetId::parse(preset_id) else {
+            return false;
+        };
+        self.set_preset(parsed);
+        true
+    }
+
+    pub fn set_mode_by_str(&mut self, mode: &str) -> bool {
+        let next_mode = match mode {
+            "preset" => SessionMode::preset(self.active_preset_id()),
+            "chromatic" => SessionMode::chromatic(),
+            _ => return false,
+        };
+        self.set_session_mode(next_mode);
+        true
+    }
+
+    pub fn set_calibration_hz(&mut self, calibration_hz: f32) -> bool {
+        if !self.tuning_session.set_calibration_hz(calibration_hz) {
+            return false;
+        }
+        self.config.calibration_hz = calibration_hz;
+        self.reset_tracking();
+        true
+    }
+
+    pub fn set_preset_match_window_cents(&mut self, window_cents: f32) -> bool {
+        if !self
+            .tuning_session
+            .set_preset_match_window_cents(window_cents)
+        {
+            return false;
+        }
+        self.config.preset_match_window_cents = window_cents;
+        self.reset_tracking();
+        true
+    }
+
+    pub fn set_min_rms(&mut self, min_rms: f32) -> bool {
+        if !self.detector.set_min_rms(min_rms) {
+            return false;
+        }
+        self.detector_config.min_rms = min_rms;
+        self.config.min_rms = min_rms;
+        true
+    }
+
+    pub fn set_min_clarity(&mut self, min_clarity: f32) -> bool {
+        if !self.detector.set_min_clarity(min_clarity) {
+            return false;
+        }
+        self.detector_config.min_clarity = min_clarity;
+        self.config.min_clarity = min_clarity;
+        true
+    }
+
+    pub fn reset(&mut self) {
+        self.detector = PitchDetector::new(self.detector_config);
+        self.reset_tracking();
+    }
+
     fn output_for_detection(
         &self,
         detection: MeasuredPitch,
@@ -281,6 +361,8 @@ impl TunerEngine {
             },
             measured_frequency_hz: Some(detection.frequency_hz),
             confidence: detection.confidence,
+            clarity: detection.clarity,
+            rms: detection.rms,
             detected_note,
             display_cents,
             target,
@@ -296,6 +378,8 @@ impl TunerEngine {
             },
             measured_frequency_hz: None,
             confidence: 0.0,
+            clarity: 0.0,
+            rms: 0.0,
             detected_note: None,
             display_cents: None,
             target: None,
@@ -351,12 +435,29 @@ impl TunerEngine {
 
         self.published_frequencies_hz.push_back(frequency_hz);
     }
+
     fn reset_tracking(&mut self) {
         self.published_frequencies_hz.clear();
         self.last_note = None;
         self.stable_pitch_count = 0;
         self.stable_string_count = 0;
         self.last_matched_string_index = None;
+    }
+
+    fn sync_session_mode(&mut self) {
+        match self.config.session_mode {
+            SessionMode::Analyze(TunerMode::Chromatic) => {
+                let _ = self.tuning_session.set_mode("chromatic");
+            }
+            SessionMode::Analyze(TunerMode::Preset(preset_id)) => {
+                self.last_preset_id = preset_id;
+                let _ = self.tuning_session.set_preset(preset_id.as_str());
+                let _ = self.tuning_session.set_mode("preset");
+            }
+            SessionMode::Target(_) => {
+                let _ = self.tuning_session.set_mode("chromatic");
+            }
+        }
     }
 }
 
@@ -401,6 +502,8 @@ mod tests {
         assert_eq!(output2.ui_state, UiState::Unstable);
         assert_eq!(output3.ui_state, UiState::InTune);
         assert_eq!(output3.target.unwrap().note_name, "A2");
+        assert!((output3.clarity - 0.9).abs() < 0.001);
+        assert!((output3.rms - 0.2).abs() < 0.001);
     }
 
     #[test]
@@ -451,5 +554,16 @@ mod tests {
             engine.toggle_analyze_mode(),
             Some(SessionMode::preset(PresetId::DropD))
         );
+    }
+
+    #[test]
+    fn preset_updates_are_applied_without_switching_current_chromatic_mode() {
+        let detector_config = PitchDetectorConfig::default();
+        let config = TunerConfig::from_detector_config(detector_config, SessionMode::chromatic());
+        let mut engine = TunerEngine::new(detector_config, config);
+
+        assert!(engine.set_preset_by_str("drop-d"));
+        assert_eq!(engine.session_mode(), SessionMode::chromatic());
+        assert_eq!(engine.active_preset_id(), PresetId::DropD);
     }
 }

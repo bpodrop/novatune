@@ -2,6 +2,7 @@
 members = [
     "crates/tuner-core",
     "crates/tuner-dsp-algo",
+    "crates/tuner-engine",
     "crates/tuner-dsp-native",
     "crates/tuner-dsp-web",
     "crates/tuner-dsp-embedded",

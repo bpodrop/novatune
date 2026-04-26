@@ -1,7 +1,10 @@
-use crate::app::SessionMode;
-use crate::tui::state::{SignalPhase, TunerUiState};
+use crate::tui::state::{
+    HeaderState, OverlayState, PitchState, PresetPickerState, SignalPhase, TelemetryState,
+    TunerUiState,
+};
 use std::time::{Duration, Instant};
 use tuner_core::PresetId;
+use tuner_engine::SessionMode;
 
 pub struct DemoState {
     started_at: Instant,
@@ -118,48 +121,58 @@ fn tuner_state(demo_state: DemoTunerState, history: Vec<u64>, animation_tick: u6
         noise_percent,
     } = demo_state;
     TunerUiState {
-        app_label: "ACCORD//R",
-        profile_label: "Drop D".to_string(),
-        mode_label: "PRESET".to_string(),
-        note_label: note_label.to_string(),
-        target_label: target_label.to_string(),
-        string_label: string_label.map(str::to_string),
-        signal_label: match phase {
-            SignalPhase::NoSignal => "NO SIGNAL",
-            SignalPhase::Searching => "SCANNING",
-            SignalPhase::Unstable => "UNSTABLE",
-            SignalPhase::TooLow | SignalPhase::TooHigh | SignalPhase::InTune => "LOCKED",
+        header: HeaderState {
+            app_label: "ACCORD//R",
+            profile_label: "Drop D".to_string(),
+            mode_label: "PRESET".to_string(),
+            signal_label: match phase {
+                SignalPhase::NoSignal => "NO SIGNAL",
+                SignalPhase::Searching => "SCANNING",
+                SignalPhase::Unstable => "UNSTABLE",
+                SignalPhase::TooLow | SignalPhase::TooHigh | SignalPhase::InTune => "LOCKED",
+            },
+            sample_rate_hz: 48_000,
         },
-        status_line: match phase {
-            SignalPhase::NoSignal => "NO INPUT SIGNAL",
-            SignalPhase::Searching => "SCANNING INPUT",
-            SignalPhase::Unstable => "NOISY // HOLD STRING",
-            SignalPhase::TooLow => "TENSION TOO LOW",
-            SignalPhase::TooHigh => "TENSION TOO HIGH",
-            SignalPhase::InTune => "LOCKED // IN TUNE",
+        pitch: PitchState {
+            note_label: note_label.to_string(),
+            target_label: target_label.to_string(),
+            string_label: string_label.map(str::to_string),
+            status_line: match phase {
+                SignalPhase::NoSignal => "NO INPUT SIGNAL",
+                SignalPhase::Searching => "SCANNING INPUT",
+                SignalPhase::Unstable => "NOISY // HOLD STRING",
+                SignalPhase::TooLow => "TENSION TOO LOW",
+                SignalPhase::TooHigh => "TENSION TOO HIGH",
+                SignalPhase::InTune => "LOCKED // IN TUNE",
+            },
+            cents_off,
+            phase,
+            frequency_hz,
+            target_hz,
         },
-        cents_off,
-        phase,
-        frequency_hz,
-        target_hz,
-        confidence,
-        clarity,
-        noise_percent: Some(noise_percent),
-        stability_percent: match phase {
-            SignalPhase::NoSignal => 0,
-            SignalPhase::Searching => 41,
-            SignalPhase::Unstable => 64,
-            SignalPhase::TooLow | SignalPhase::TooHigh => 86,
-            SignalPhase::InTune => 97,
+        telemetry: TelemetryState {
+            confidence,
+            clarity,
+            noise_percent: Some(noise_percent),
+            stability_percent: match phase {
+                SignalPhase::NoSignal => 0,
+                SignalPhase::Searching => 41,
+                SignalPhase::Unstable => 64,
+                SignalPhase::TooLow | SignalPhase::TooHigh => 86,
+                SignalPhase::InTune => 97,
+            },
+            history,
         },
-        sample_rate_hz: 48_000,
-        history,
+        overlays: OverlayState {
+            notice: None,
+            help_visible: false,
+            preset_picker: PresetPickerState {
+                visible: false,
+                items: Vec::new(),
+                selected_index: 0,
+            },
+        },
         animation_tick,
-        overlay_notice: None,
-        help_visible: false,
-        preset_picker_visible: false,
-        preset_picker_items: Vec::new(),
-        preset_picker_selected: 0,
     }
 }
 

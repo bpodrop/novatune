@@ -6,7 +6,7 @@ license.workspace = true
 
 [dependencies]
 tuner-core = { path = "../../crates/tuner-core" }
-tuner-dsp-algo = { path = "../../crates/tuner-dsp-algo" }
+tuner-engine = { path = "../../crates/tuner-engine" }
 tuner-dsp-native = { path = "../../crates/tuner-dsp-native" }
 crossterm = "0.28"
 ratatui = "0.29"

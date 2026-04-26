@@ -11,8 +11,8 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState, screen_class:
     let compact = matches!(screen_class, ScreenClass::Compact);
     let gauge_width = gauge_width(area.width, compact);
     let rows = build_gauge_rows(
-        state.cents_off,
-        state.phase,
+        state.pitch.cents_off,
+        state.pitch.phase,
         gauge_width,
         DEFAULT_IN_TUNE_THRESHOLD_CENTS,
         compact,
@@ -27,7 +27,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &TunerUiState, screen_class:
     frame.render_widget(
         Paragraph::new(vec![
             Line::styled(rows.scale, theme::muted()),
-            Line::styled(rows.marker, theme::emphasis(state.phase)),
+            Line::styled(rows.marker, theme::emphasis(state.pitch.phase)),
             Line::styled(rows.legend, theme::telemetry()),
         ])
         .alignment(Alignment::Center),

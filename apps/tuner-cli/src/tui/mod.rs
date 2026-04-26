@@ -6,7 +6,6 @@ mod state;
 mod theme;
 mod widgets;
 
-use crate::app::{SessionMode, TunerConfig, TunerEngine};
 use crate::tui::demo::DemoState;
 use crate::tui::render::render;
 use crate::tui::state::{HistoryBuffer, TunerUiState, output_to_ui_state};
@@ -21,8 +20,8 @@ use std::io::{self, Stdout};
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 use tuner_core::{PresetId, TunerMode};
-use tuner_dsp_algo::PitchDetectorConfig;
 use tuner_dsp_native::{AudioCapture, AudioInputKind};
+use tuner_engine::{PitchDetectorConfig, SessionMode, TunerConfig, TunerEngine};
 
 const LIVE_LOOP_TICK: Duration = Duration::from_millis(16);
 const DEMO_LOOP_TICK: Duration = Duration::from_millis(50);
@@ -89,7 +88,7 @@ pub fn run_demo_tui() -> io::Result<()> {
         }
 
         let mut frame_state = demo.current_frame();
-        frame_state.help_visible = help_visible;
+        frame_state.overlays.help_visible = help_visible;
         terminal.draw(|frame| render(frame, &frame_state))?;
     }
 }
@@ -204,11 +203,11 @@ fn run_live_loop(
 
         animation_tick = animation_tick.wrapping_add(1);
         ui_state.animation_tick = animation_tick;
-        ui_state.overlay_notice = overlay_notice.as_ref().map(|notice| notice.message.clone());
-        ui_state.help_visible = help_visible;
-        ui_state.preset_picker_visible = preset_picker.visible;
-        ui_state.preset_picker_items = preset_picker.items();
-        ui_state.preset_picker_selected = preset_picker.selected_index;
+        ui_state.overlays.notice = overlay_notice.as_ref().map(|notice| notice.message.clone());
+        ui_state.overlays.help_visible = help_visible;
+        ui_state.overlays.preset_picker.visible = preset_picker.visible;
+        ui_state.overlays.preset_picker.items = preset_picker.items();
+        ui_state.overlays.preset_picker.selected_index = preset_picker.selected_index;
         if let Some(notice) = overlay_notice.as_mut() {
             if notice.ttl_frames > 0 {
                 notice.ttl_frames -= 1;

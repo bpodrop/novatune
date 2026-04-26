@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 tuner-core = { path = "../tuner-core" }
-tuner-dsp-algo = { path = "../tuner-dsp-algo" }
+tuner-engine = { path = "../tuner-engine" }
 wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde-wasm-bindgen = "0.6"

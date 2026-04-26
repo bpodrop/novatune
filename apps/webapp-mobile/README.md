@@ -33,6 +33,8 @@ Artefacts commités dans :
 Source :
 
 - crate Rust : `crates/tuner-dsp-web`
+- moteur partagé : `crates/tuner-engine`
+- runtime web partagé : `packages/tuner-web-core`
 - script : `scripts/build-wasm-from-workspace.mjs`
 
 Quand le DSP/bridge change, exécuter `npm run wasm:build` et committer `src/tuner/wasm/pkg/*`.

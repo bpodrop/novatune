@@ -21,7 +21,7 @@ pub fn render(frame: &mut Frame, ui_state: &TunerUiState) {
 }
 
 fn render_overlay(frame: &mut Frame, ui_state: &TunerUiState) {
-    let Some(message) = ui_state.overlay_notice.as_ref() else {
+    let Some(message) = ui_state.overlays.notice.as_ref() else {
         return;
     };
 
@@ -48,7 +48,7 @@ fn render_overlay(frame: &mut Frame, ui_state: &TunerUiState) {
 }
 
 fn render_help(frame: &mut Frame, ui_state: &TunerUiState) {
-    if !ui_state.help_visible || frame.area().width < 40 || frame.area().height < 12 {
+    if !ui_state.overlays.help_visible || frame.area().width < 40 || frame.area().height < 12 {
         return;
     }
 
@@ -98,12 +98,13 @@ fn render_help(frame: &mut Frame, ui_state: &TunerUiState) {
 }
 
 fn render_preset_picker(frame: &mut Frame, ui_state: &TunerUiState) {
-    if !ui_state.preset_picker_visible || ui_state.preset_picker_items.is_empty() {
+    if !ui_state.overlays.preset_picker.visible || ui_state.overlays.preset_picker.items.is_empty() {
         return;
     }
 
     let height =
-        (ui_state.preset_picker_items.len() as u16 + 4).min(frame.area().height.saturating_sub(2));
+        (ui_state.overlays.preset_picker.items.len() as u16 + 4)
+            .min(frame.area().height.saturating_sub(2));
     let outer = centered_rect(frame.area(), 40, height);
     frame.render_widget(Clear, outer);
 
@@ -118,19 +119,21 @@ fn render_preset_picker(frame: &mut Frame, ui_state: &TunerUiState) {
     let inner = block.inner(outer);
     frame.render_widget(block, outer);
 
-    let constraints = vec![Constraint::Length(1); ui_state.preset_picker_items.len()];
+    let constraints = vec![Constraint::Length(1); ui_state.overlays.preset_picker.items.len()];
     let rows = Layout::default()
         .direction(Direction::Vertical)
         .constraints(constraints)
         .split(inner);
 
     for (idx, ((_, label), area)) in ui_state
-        .preset_picker_items
+        .overlays
+        .preset_picker
+        .items
         .iter()
         .zip(rows.iter())
         .enumerate()
     {
-        let style = if idx == ui_state.preset_picker_selected {
+        let style = if idx == ui_state.overlays.preset_picker.selected_index {
             theme::selected_item()
         } else {
             theme::telemetry()

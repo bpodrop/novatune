@@ -1,8 +1,4 @@
-pub mod tuner_engine;
-
 use tuner_core::{Note, PresetId, TunerMode};
-
-pub use tuner_engine::{TunerConfig, TunerEngine};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SessionMode {
