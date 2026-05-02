@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { AppFooter } from './features/layout/AppFooter'
 import { AppHeader } from './features/layout/AppHeader'
+import { usePwaInstall } from './features/pwa/usePwaInstall'
 import { SettingsView } from './features/settings/SettingsView'
 import { useThemeMode } from './features/settings/useThemeMode'
 import { TunerPanel } from './features/tuner/TunerPanel'
@@ -11,6 +12,7 @@ type ViewId = 'tuner' | 'settings'
 
 function App() {
   const themeControls = useThemeMode()
+  const pwaInstall = usePwaInstall()
   const [activeView, setActiveView] = useState<ViewId>('tuner')
   const tuner = useTunerController()
   const { presets, selection, settings, runtime } = tuner
@@ -18,6 +20,8 @@ function App() {
   return (
     <main className="app-shell" data-theme={themeControls.theme}>
       <AppHeader
+        installPromptAvailable={pwaInstall.canInstall}
+        onInstallApp={pwaInstall.installApp}
         onOpenSettings={() => setActiveView((view) => (view === 'settings' ? 'tuner' : 'settings'))}
       />
 

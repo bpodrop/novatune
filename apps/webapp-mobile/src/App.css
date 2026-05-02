@@ -105,11 +105,38 @@
   padding: 0 0.1rem 0 0.2rem;
 }
 
+.top-app-bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .brand {
   color: var(--cli-amber);
   font-weight: 700;
   letter-spacing: 0.12em;
   font-size: 0.9rem;
+}
+
+.header-pill-button {
+  min-height: 2.1rem;
+  border: 1px solid var(--cli-accent-active-border);
+  background: var(--cli-accent-active-bg);
+  color: var(--cli-on-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 0.8rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 1px var(--cli-accent-active-ring);
+}
+
+.header-pill-button:active {
+  transform: scale(0.98);
 }
 
 .ghost-icon-button {
@@ -799,5 +826,4 @@
   .top-app-bar {
     padding: 0 0.5rem;
   }
-
 }

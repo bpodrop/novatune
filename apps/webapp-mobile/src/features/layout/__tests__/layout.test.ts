@@ -12,6 +12,19 @@ describe('AppHeader', () => {
     expect(markup).toContain('aria-label="Settings"')
     expect(markup).toContain('gear-icon')
   })
+
+  it('renders install control when prompt is available', () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(AppHeader, {
+        onOpenSettings: () => {},
+        installPromptAvailable: true,
+        onInstallApp: async () => {},
+      }),
+    )
+
+    expect(markup).toContain('Install')
+    expect(markup).toContain('aria-label="Install app"')
+  })
 })
 
 describe('AppFooter', () => {
